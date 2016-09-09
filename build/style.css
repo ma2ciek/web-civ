@@ -1,3 +1,54 @@
-body { 
+body {
     margin: 0;
+}
+
+.app {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+.map {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.map-content {
+    position: relative;
+}
+
+.tile {
+    position: absolute;
+}
+
+.unit {
+    position: absolute;
+}
+
+.unit polygon {
+    fill: red;
+}
+
+.my-unit polygon {
+    fill: green;
+}
+
+.tile polygon {
+    fill: #eee;
+    stroke-width: 1px;
+    stroke: #555;
+}
+
+.tile polygon:hover {
+    fill: #09f;
+}
+
+.board {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    color: white;
+    background: #333;
 }
