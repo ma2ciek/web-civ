@@ -1,6 +1,6 @@
 import { AppState } from './AppState';
 import { handleActions } from 'redux-actions';
-import { GENERATE_MAP, GENERATE_PLAYERS, MOVE_CAMERA, NEXT_TURN, MAYBE_MOVE_TO } from './actions';
+import { GENERATE_MAP, GENERATE_PLAYERS, MOVE_CAMERA, NEXT_TURN, MAYBE_MOVE_BY } from './actions';
 import { generateTiles } from './generators/generateTiles';
 import { generatePlayers } from './generators/generatePlayers';
 import { getTilePosition, getSurroundingTiles } from './Tile';
@@ -19,7 +19,7 @@ const initialState: AppState = {
     camera: {
         x: 0,
         y: 0,
-        zoom: 1
+        zoom: 1,
     },
     selectedUnitIndex: 0,
 };
@@ -33,7 +33,7 @@ export default handleActions<AppState, any>({
     [GENERATE_PLAYERS]: state => {
         const players = generatePlayers({ tiles: state.tiles, playersAmount: state.playersAmount })
             .map(p => assign({}, p, {
-                seenTiles: getSurroundingTiles(state.tiles, p.units.map(u => u.tile), state.mapWidth, state.mapHeight)
+                seenTiles: getSurroundingTiles(state.tiles, p.units.map(u => u.tile), state.mapWidth, state.mapHeight),
             }));
 
         console.log(players);
@@ -49,7 +49,7 @@ export default handleActions<AppState, any>({
             camera: assign({}, state.camera, {
                 x: firstUnitTile.left,
                 y: firstUnitTile.top,
-            })
+            }),
         });
     },
 
@@ -57,7 +57,7 @@ export default handleActions<AppState, any>({
         camera: assign({}, state.camera, {
             x: state.camera.x + action.payload.x,
             y: state.camera.y + action.payload.y,
-        })
+        }),
     }),
 
     [NEXT_TURN]: state => {
@@ -73,18 +73,18 @@ export default handleActions<AppState, any>({
             camera: assign({}, state.camera, {
                 x: firstUnitTile.left,
                 y: firstUnitTile.top,
-            })
+            }),
         });
     },
 
-    [MAYBE_MOVE_TO]: (state, action) => {
+    [MAYBE_MOVE_BY]: (state, action) => {
         // TODO - check if unit can move
         const currentPlayer = state.players[state.currentPlayerIndex];
 
         const currentPlayerAfterMovedUnit = assign({}, currentPlayer, {
             units: currentPlayer.units.map((u, index) => index === state.selectedUnitIndex ?
                 assign({}, u, {
-                    tile: action.payload.tile
+                    tile: action.payload.tile,
                 }) : u
             ),
         });
@@ -97,14 +97,14 @@ export default handleActions<AppState, any>({
                     currentPlayerAfterMovedUnit.units.map(u => u.tile),
                     state.mapWidth,
                     state.mapHeight
-                )
-            ])
+                ),
+            ]),
         });
 
         const players = state.players
             .map((p, index) => index === state.currentPlayerIndex ? currentPlayerAfterSeenTiles : p);
 
         return assign({}, state, { players });
-    }
+    },
 
 }, initialState);

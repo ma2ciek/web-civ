@@ -2,6 +2,8 @@
   "globalDependencies": {
     "lodash": "registry:dt/lodash#4.14.0+20160830145422",
     "react": "registry:dt/react#0.14.0+20160829191040",
+    "react-addons-css-transition-group": "registry:dt/react-addons-css-transition-group#0.14.0+20160316155526",
+    "react-addons-transition-group": "registry:dt/react-addons-transition-group#0.14.0+20160701001352",
     "react-dom": "registry:dt/react-dom#0.14.0+20160412154040",
     "react-redux": "registry:dt/react-redux#4.4.0+20160908183346",
     "redux": "registry:dt/redux#3.5.2+20160703092728",

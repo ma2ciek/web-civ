@@ -8,7 +8,8 @@ module.exports = {
     devtool: 'source-map',
 
     resolve: {
-        extensions: ['', 'webpack.config.js', '.web.js', '.ts', '.tsx', '.js']
+        extensions: ['', 'webpack.config.js', '.web.js', '.ts', '.tsx', '.js'],
+        alias: { 'react$': 'react/lib/ReactWithAddons.js', 'react-dom$': 'react/lib/ReactDOM.js' }
     },
 
     module: {
@@ -23,8 +24,8 @@ module.exports = {
         ]
     },
 
-    externals: {
-        'react': 'React',
-        'react-dom': 'ReactDOM'
-    },
+    // externals: {
+    //     'react': 'React',
+    //     'react-dom': 'ReactDOM',
+    // },
 }

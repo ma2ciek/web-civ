@@ -19,7 +19,7 @@ export function generatePlayers({ tiles, playersAmount }: PlayerGeneratorProps) 
                 name: 'settler',
                 tile: tiles[Math.random() * tiles.length | 0],
             }],
-        })
+        });
     }
 
     return players;
