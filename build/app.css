@@ -87,16 +87,16 @@ body {
     position: absolute;
     transition: all 0.5s ease;
     cursor: pointer; }
+    .map svg.unit:hover polygon {
+      stroke-width: 5px;
+      stroke: #09f; }
     .map svg.unit.selected-unit polygon {
       stroke-width: 10px;
       stroke: gold; }
   .map svg.tile {
     position: absolute; }
     .map svg.tile polygon {
-      fill: #eee;
       stroke-width: 1px;
       stroke: #555; }
-    .map svg.tile polygon:hover {
-      fill: #09f; }
 
 /*# sourceMappingURL=app.css.map*/

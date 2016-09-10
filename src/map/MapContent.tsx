@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { AppState, Player, Camera, Selected, Tile } from '../AppState';
+import { AppState, Player, Camera, Selected } from '../AppState';
 import { maybeMoveCurrentUnit, selectUnit, selectTown } from '../actions';
-import { getTilePosition, isTileVisible, TILE_WIDTH, TILE_HEIGHT } from '../Tile';
+import { isTileVisible, TILE_WIDTH, TILE_HEIGHT } from '../Tile';
 import { FadeAnimate } from '../animations';
 import { PLAYER_COLORS } from '../constants';
 import { UnitComponent } from './UnitComponent';
 import { TownComponent } from './TownComponent';
+import { TileComponent } from './TileComponent';
 
 interface MapContentProps {
     camera: Camera;
@@ -15,17 +16,6 @@ interface MapContentProps {
     currentPlayerIndex: number;
     selected: Selected;
 }
-
-interface TileContentProps {
-    tile: Tile;
-    onContextMenu(): void;
-}
-
-export const TileComponent = ({ tile, onContextMenu }: TileContentProps) => (
-    <svg onContextMenu={() => onContextMenu()} className='tile' viewBox='0 20 300 280' width={TILE_WIDTH} style={getTilePosition(tile)}>
-        <polygon points='300,150 225,280 75,280 0,150 75,20 225,20'></polygon>
-    </svg>
-);
 
 const _MapContent = ({ camera, players, currentPlayerIndex, dispatch, selected }: MapContentProps) => {
     const currentPlayer = players[currentPlayerIndex];

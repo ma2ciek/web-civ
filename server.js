@@ -13,4 +13,4 @@ app.listen(4444, () => {
     'use strict';
 
     console.log('app listening on 4444 port');
-})
+});

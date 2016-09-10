@@ -30782,12 +30782,12 @@
 
 	"use strict";
 	const constants_1 = __webpack_require__(362);
-	var TileTypes;
-	(function (TileTypes) {
-	    TileTypes[TileTypes["Water"] = 0] = "Water";
-	    TileTypes[TileTypes["Grass"] = 1] = "Grass";
-	    TileTypes[TileTypes["Desert"] = 2] = "Desert";
-	})(TileTypes || (TileTypes = {}));
+	const utils_1 = __webpack_require__(379);
+	const tileTypeChances = [
+	    { type: 'grass', chance: 5 },
+	    { type: 'forest', chance: 2 },
+	    { type: 'water', chance: 1 },
+	];
 	function generateTiles() {
 	    const tiles = [];
 	    let nextId = 0;
@@ -30800,7 +30800,7 @@
 	                },
 	                id: nextId++,
 	                ownerId: -1,
-	                type: '',
+	                type: utils_1.getRandomType(tileTypeChances),
 	            });
 	        }
 	    }
@@ -47807,9 +47807,7 @@
 	const constants_1 = __webpack_require__(362);
 	const UnitComponent_1 = __webpack_require__(372);
 	const TownComponent_1 = __webpack_require__(373);
-	exports.TileComponent = ({ tile, onContextMenu }) => (React.createElement("svg", {onContextMenu: () => onContextMenu(), className: 'tile', viewBox: '0 20 300 280', width: Tile_1.TILE_WIDTH, style: Tile_1.getTilePosition(tile)}, 
-	    React.createElement("polygon", {points: '300,150 225,280 75,280 0,150 75,20 225,20'})
-	));
+	const TileComponent_1 = __webpack_require__(380);
 	const _MapContent = ({ camera, players, currentPlayerIndex, dispatch, selected }) => {
 	    const currentPlayer = players[currentPlayerIndex];
 	    if (!currentPlayer)
@@ -47818,7 +47816,7 @@
 	        marginLeft: -camera.left + window.innerWidth / 2 - Tile_1.TILE_WIDTH / 2,
 	        marginTop: -camera.top + window.innerHeight / 2 - Tile_1.TILE_HEIGHT / 2,
 	    }}, 
-	        React.createElement(animations_1.FadeAnimate, null, currentPlayer && currentPlayer.seenTiles.filter(tile => Tile_1.isTileVisible(tile, camera)).map(tile => React.createElement(exports.TileComponent, {tile: tile, key: tile.id, onContextMenu: () => dispatch(actions_1.maybeMoveCurrentUnit(tile))}))), 
+	        React.createElement(animations_1.FadeAnimate, null, currentPlayer && currentPlayer.seenTiles.filter(tile => Tile_1.isTileVisible(tile, camera)).map(tile => React.createElement(TileComponent_1.TileComponent, {tile: tile, key: tile.id, onContextMenu: () => dispatch(actions_1.maybeMoveCurrentUnit(tile))}))), 
 	        players.map(player => player.units
 	            .filter(unit => currentPlayer.seenTiles.map(t => t.id).indexOf(unit.tile.id) > -1)
 	            .map(unit => {
@@ -47867,11 +47865,26 @@
 	"use strict";
 	const React = __webpack_require__(1);
 	const Tile_1 = __webpack_require__(364);
-	const lodash_1 = __webpack_require__(365);
-	exports.UnitComponent = ({ unit, onContextMenu, onClick, color, selected }) => (React.createElement("svg", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'unit' + (selected ? ' selected-unit' : ''), viewBox: '0 20 300 260', fill: color, width: Tile_1.TILE_WIDTH * 9 / 10, style: lodash_1.assign({}, Tile_1.getTilePosition(unit.tile), { padding: Tile_1.TILE_WIDTH * 1 / 20 })}, 
-	    React.createElement("polygon", {points: '300,150 225,280 75,280 0,150 75,20 225,20'}), 
-	    React.createElement("text", {fontSize: 50, alignmentBaseline: 'middle', x: '50%', y: '50%', textAnchor: 'middle', fill: 'black'}, unit.name), 
-	    ";"));
+	const KnightPattern = () => (React.createElement("defs", null, 
+	    React.createElement("pattern", {id: 'warrior', patternUnits: 'userSpaceOnUse', width: '300', height: '300'}, 
+	        React.createElement("image", {xlinkHref: 'images/warrior.png', x: '50', y: '50', width: '200', height: '200'})
+	    )
+	));
+	const SettlerPattern = () => (React.createElement("defs", null, 
+	    React.createElement("pattern", {id: 'settler', patternUnits: 'userSpaceOnUse', width: '300', height: '300'}, 
+	        React.createElement("image", {xlinkHref: 'images/settler.png', x: '50', y: '50', width: '200', height: '200'})
+	    )
+	));
+	const mapUnitNameToPattern = {
+	    warrior: KnightPattern,
+	    settler: SettlerPattern,
+	};
+	exports.UnitComponent = ({ unit, onContextMenu, onClick, color, selected }) => {
+	    const Pattern = mapUnitNameToPattern[unit.name];
+	    return (React.createElement("svg", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'unit' + (selected ? ' selected-unit' : ''), viewBox: '0 20 300 260', width: Tile_1.TILE_WIDTH, style: Tile_1.getTilePosition(unit.tile)}, 
+	        React.createElement(Pattern, null), 
+	        React.createElement("polygon", {points: '300,150 225,280 75,280 0,150 75,20 225,20', fill: 'url(#' + unit.name + ')'})));
+	};
 
 
 /***/ },
@@ -47882,8 +47895,14 @@
 	const React = __webpack_require__(1);
 	const Tile_1 = __webpack_require__(364);
 	const lodash_1 = __webpack_require__(365);
-	exports.TownComponent = ({ town, onContextMenu, onClick, color, selected }) => (React.createElement("svg", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'town' + (selected ? ' selected-Town' : ''), viewBox: '0 20 300 260', fill: color, width: Tile_1.TILE_WIDTH * 9 / 10, style: lodash_1.assign({}, Tile_1.getTilePosition(town.tile), { padding: Tile_1.TILE_WIDTH * 1 / 20 })}, 
-	    React.createElement("polygon", {points: '300,150 225,280 75,280 0,150 75,20 225,20', stroke: 'blue', strokeWidth: 20}), 
+	const TownPattern = () => (React.createElement("defs", null, 
+	    React.createElement("pattern", {id: 'middle-age-city', patternUnits: 'userSpaceOnUse', width: '300', height: '300'}, 
+	        React.createElement("image", {xlinkHref: 'images/middle-age-city.jpg', x: '0', y: '0', width: '300', height: '300'})
+	    )
+	));
+	exports.TownComponent = ({ town, onContextMenu, onClick, color, selected }) => (React.createElement("svg", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'town' + (selected ? ' selected-Town' : ''), viewBox: '0 20 300 260', width: Tile_1.TILE_WIDTH * 9 / 10, style: lodash_1.assign({}, Tile_1.getTilePosition(town.tile), { padding: Tile_1.TILE_WIDTH * 1 / 20 })}, 
+	    React.createElement(TownPattern, null), 
+	    React.createElement("polygon", {points: '300,150 225,280 75,280 0,150 75,20 225,20', fill: 'url(#middle-age-city)'}), 
 	    React.createElement("text", {fontSize: 40, alignmentBaseline: 'middle', x: '50%', y: '50%', textAnchor: 'middle', fill: 'black'}, town.name), 
 	    ";"));
 
@@ -47937,6 +47956,61 @@
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 376 */,
+/* 377 */,
+/* 378 */,
+/* 379 */
+/***/ function(module, exports) {
+
+	"use strict";
+	function getRandomType(chanceList) {
+	    const multiplier = 1 / chanceList.map(t => t.chance).reduce((sum, x) => sum + x, 0);
+	    let random = Math.random();
+	    for (const t of chanceList) {
+	        if (random < t.chance * multiplier)
+	            return t.type;
+	        random -= t.chance * multiplier;
+	    }
+	}
+	exports.getRandomType = getRandomType;
+
+
+/***/ },
+/* 380 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	const Tile_1 = __webpack_require__(364);
+	const WaterPattern = () => (React.createElement("defs", null, 
+	    React.createElement("pattern", {id: 'water', patternUnits: 'userSpaceOnUse', width: '300', height: '300'}, 
+	        React.createElement("image", {xlinkHref: 'images/water-texture.jpg', x: '0', y: '0', width: '300', height: '300'})
+	    )
+	));
+	const GrassPattern = () => (React.createElement("defs", null, 
+	    React.createElement("pattern", {id: 'grass', patternUnits: 'userSpaceOnUse', width: '300', height: '300'}, 
+	        React.createElement("image", {xlinkHref: 'images/grass-texture.jpg', x: '0', y: '0', width: '300', height: '300'})
+	    )
+	));
+	const ForestPattern = () => (React.createElement("defs", null, 
+	    React.createElement("pattern", {id: 'forest', patternUnits: 'userSpaceOnUse', width: '300', height: '300'}, 
+	        React.createElement("image", {xlinkHref: 'images/forest-texture.jpg', x: '0', y: '0', width: '300', height: '300'})
+	    )
+	));
+	const mapTypeToPattern = {
+	    water: WaterPattern,
+	    forest: ForestPattern,
+	    grass: GrassPattern,
+	};
+	exports.TileComponent = ({ tile, onContextMenu }) => {
+	    const Pattern = mapTypeToPattern[tile.type];
+	    return (React.createElement("svg", {onContextMenu: () => onContextMenu(), className: 'tile', viewBox: '0 20 300 260', width: Tile_1.TILE_WIDTH, style: Tile_1.getTilePosition(tile)}, 
+	        React.createElement(Pattern, null), 
+	        React.createElement("polygon", {points: '300,150 225,280 75,280 0,150 75,20 225,20', fill: 'url(#' + tile.type + ')'})));
+	};
+
 
 /***/ }
 /******/ ]);
