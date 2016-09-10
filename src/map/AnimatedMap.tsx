@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { generatePlayers, generateMap, moveCamera } from '../actions';
-import { MapContent} from './MapContent';
+import { MapContent } from './MapContent';
 
 interface AppProps {
     dispatch: Function;
@@ -22,7 +22,7 @@ class _AnimatedMap extends React.Component<AppProps, {}> {
 
     public render() {
         return (
-            <div className='map' ref={ (map) => this.setControls(map) }>
+            <div className='map' ref={(map) => this.setControls(map)}>
                 <MapContent />
             </div>
         );

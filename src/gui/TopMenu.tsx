@@ -21,12 +21,12 @@ const _TopMenu = ({ turn, players, currentPlayerIndex, dispatch }: TopMenuProps)
 
     return (
         <div className='top-menu'>
-            <span className='current-player'>{ 'Current player: ' + PLAYER_COLORS[currentPlayer.id]}</span>
-            <span className='current-turn'>{ 'Turn: ' + turn }</span>
-            <a onClick={ () => dispatch(nextTurn()) }><IconReload /></a>
+            <span className='current-player'>{'Current player: ' + PLAYER_COLORS[currentPlayer.id]}</span>
+            <span className='current-turn'>{'Turn: ' + turn}</span>
+            <a onClick={() => dispatch(nextTurn())}><IconReload /></a>
         </div>
     );
-}
+};
 
 export const TopMenu = connect(
     (state: AppState) => ({

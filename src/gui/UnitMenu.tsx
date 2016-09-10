@@ -4,13 +4,17 @@ import { AppState, Unit } from '../AppState';
 import { IconHome } from '../icons';
 import { createCity } from '../actions';
 
-const SettlerOptions = ({ dispatch }) => {
+interface UnitOptionsProps {
+    dispatch: Function;
+}
+
+const SettlerOptions = ({ dispatch }: UnitOptionsProps) => {
     return (
         <div className='settler-options'>
 
             <div className='option'>
-                <a onClick={() => dispatch(createCity()) }>
-                    <IconHome/>
+                <a onClick={() => dispatch(createCity())}>
+                    <IconHome />
                 </a>
             </div>
 
@@ -19,9 +23,8 @@ const SettlerOptions = ({ dispatch }) => {
 };
 
 
-interface UnitMenuProps {
+interface UnitMenuProps extends UnitOptionsProps {
     selectedUnit: Unit;
-    dispatch: Function;
 }
 
 class _UnitMenu extends React.Component<UnitMenuProps, {}> {
@@ -32,9 +35,9 @@ class _UnitMenu extends React.Component<UnitMenuProps, {}> {
 
         return (
             <div className='unit-side-menu'>
-                <h2>{ selectedUnit.name.toUpperCase() }</h2>
+                <h2>{selectedUnit.name.toUpperCase()}</h2>
                 <div className='unit-options'>
-                    { this.renderOptions() }
+                    {this.renderOptions()}
                 </div>
             </div>
         );
@@ -46,7 +49,7 @@ class _UnitMenu extends React.Component<UnitMenuProps, {}> {
 
         switch (selectedUnit.name) {
             case 'settler':
-                return <SettlerOptions dispatch={this.props.dispatch}/>;
+                return <SettlerOptions dispatch={this.props.dispatch} />;
             default:
                 return null;
         }

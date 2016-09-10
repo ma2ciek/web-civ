@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+    font-family: Verdana, Lato;
+    box-sizing: border-box;
+}
+
+.app {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+@import 'animations/fade';
+
+@import 'gui/top-menu';
+@import 'gui/unit-menu';
+
+@import 'map/map';

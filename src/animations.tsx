@@ -7,7 +7,7 @@ export class FadeAnimate extends React.Component<{}, {}> {
                 transitionName='fade'
                 transitionEnterTimeout={500}
                 transitionLeaveTimeout={300}>
-                { this.props.children }
+                {this.props.children}
             </React.addons.CSSTransitionGroup>
         );
     }

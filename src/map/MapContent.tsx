@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { AppState, Player, Camera, Selected } from '../AppState';
+import { AppState, Player, Camera, Selected, Tile } from '../AppState';
 import { maybeMoveCurrentUnit, selectUnit, selectTown } from '../actions';
 import { getTilePosition, isTileVisible, TILE_WIDTH, TILE_HEIGHT } from '../Tile';
 import { FadeAnimate } from '../animations';
@@ -16,8 +16,13 @@ interface MapContentProps {
     selected: Selected;
 }
 
-export const TileComponent = ({ tile, className, onContextMenu }) => (
-    <svg onContextMenu={onContextMenu} className={ className } viewBox='0 20 300 280' width={ TILE_WIDTH } style={ getTilePosition(tile) }>
+interface TileContentProps {
+    tile: Tile;
+    onContextMenu(): void;
+}
+
+export const TileComponent = ({ tile, onContextMenu }: TileContentProps) => (
+    <svg onContextMenu={() => onContextMenu()} className='tile' viewBox='0 20 300 280' width={TILE_WIDTH} style={getTilePosition(tile)}>
         <polygon points='300,150 225,280 75,280 0,150 75,20 225,20'></polygon>
     </svg>
 );
@@ -34,56 +39,55 @@ const _MapContent = ({ camera, players, currentPlayerIndex, dispatch, selected }
             marginTop: -camera.top + window.innerHeight / 2 - TILE_HEIGHT / 2,
         }}>
             <FadeAnimate>
-                { currentPlayer && currentPlayer.seenTiles.filter(tile => isTileVisible(tile, camera)).map(tile =>
+                {currentPlayer && currentPlayer.seenTiles.filter(tile => isTileVisible(tile, camera)).map(tile =>
                     <TileComponent
                         tile={tile}
                         key={tile.id}
-                        className='tile'
-                        onContextMenu={ () => dispatch(maybeMoveCurrentUnit(tile)) } />
-                ) }
+                        onContextMenu={() => dispatch(maybeMoveCurrentUnit(tile))} />
+                )}
             </FadeAnimate>
 
-            { players.map(player =>
+            {players.map(player =>
                 player.units
                     .filter(unit => currentPlayer.seenTiles.map(t => t.id).indexOf(unit.tile.id) > -1)
                     .map(unit => {
 
                         return (
                             <UnitComponent
-                                unit={ unit }
-                                key={ unit.id }
-                                selected={ player.id === currentPlayer.id && selected.id === unit.id }
-                                color={ PLAYER_COLORS[player.id]}
+                                unit={unit}
+                                key={unit.id}
+                                selected={player.id === currentPlayer.id && selected.id === unit.id}
+                                color={PLAYER_COLORS[player.id]}
                                 onContextMenu={() => { } }
-                                onClick={ () => {
+                                onClick={() => {
                                     if (unit.ownerId === currentPlayer.id) {
                                         dispatch(selectUnit(unit));
                                     }
-                                } }/>
+                                } } />
                         );
                     })
-            ) }
+            )}
 
             <FadeAnimate>
-                { players.map((player, playerIndex) =>
+                {players.map((player, playerIndex) =>
                     player.towns
                         .filter(town => currentPlayer.seenTiles.map(t => t.id).indexOf(town.tile.id) > -1)
                         .map(town => {
                             return (
                                 <TownComponent
-                                    town={ town }
-                                    key={ town.id }
-                                    selected={ player.id === currentPlayer.id && selected.id === town.id }
-                                    color={ PLAYER_COLORS[playerIndex]}
+                                    town={town}
+                                    key={town.id}
+                                    selected={player.id === currentPlayer.id && selected.id === town.id}
+                                    color={PLAYER_COLORS[playerIndex]}
                                     onContextMenu={() => { } }
                                     onClick={() => {
                                         if (town.ownerId === currentPlayer.id) {
                                             dispatch(selectTown(town));
                                         }
-                                    } }/>
+                                    } } />
                             );
                         })
-                ) }
+                )}
             </FadeAnimate>
         </div>
     );

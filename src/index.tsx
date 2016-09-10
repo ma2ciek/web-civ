@@ -5,6 +5,8 @@ import { createStore } from 'redux';
 import reducer from './reducer';
 import App from './App';
 
+import './app.scss';
+
 const store = createStore(reducer);
 
 ReactDOM.render(
