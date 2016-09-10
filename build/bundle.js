@@ -25489,6 +25489,14 @@
 	            },
 	        });
 	    },
+	    [actions_1.SELECT_TOWN]: (state, action) => {
+	        return assign({}, state, {
+	            selected: {
+	                type: 'town',
+	                id: action.payload.id,
+	            },
+	        });
+	    },
 	    [actions_1.MAYBE_MOVE_BY]: (state, action) => {
 	        // TODO - check if unit can move
 	        state = updateSelectedUnit(state, unit => ({
@@ -30761,6 +30769,8 @@
 	exports.createCity = redux_actions_1.createAction(exports.CREATE_CITY);
 	exports.SELECT_UNIT = 'SELECT_UNIT';
 	exports.selectUnit = redux_actions_1.createAction(exports.SELECT_UNIT, (unit) => unit);
+	exports.SELECT_TOWN = 'SELECT_TOWN';
+	exports.selectTown = redux_actions_1.createAction(exports.SELECT_TOWN, (town) => town);
 
 
 /***/ },
@@ -47795,7 +47805,11 @@
 	    })), React.createElement(animations_1.FadeAnimate, null, players.map((player, playerIndex) => player.towns
 	        .filter(town => currentPlayer.seenTiles.map(t => t.id).indexOf(town.tile.id) > -1)
 	        .map(town => {
-	        return (React.createElement(TownComponent_1.TownComponent, {town: town, key: town.id, selected: player.id === currentPlayer.id && selected.id === town.id, color: constants_1.PLAYER_COLORS[playerIndex], onContextMenu: () => { }}));
+	        return (React.createElement(TownComponent_1.TownComponent, {town: town, key: town.id, selected: player.id === currentPlayer.id && selected.id === town.id, color: constants_1.PLAYER_COLORS[playerIndex], onContextMenu: () => { }, onClick: () => {
+	            if (town.ownerId === currentPlayer.id) {
+	                dispatch(actions_1.selectTown(town));
+	            }
+	        }}));
 	    })))));
 	};
 	exports.MapContent = react_redux_1.connect((state) => ({
@@ -47839,7 +47853,7 @@
 	const React = __webpack_require__(1);
 	const Tile_1 = __webpack_require__(364);
 	const lodash_1 = __webpack_require__(365);
-	exports.TownComponent = ({ town, onContextMenu, color, selected }) => (React.createElement("svg", {onContextMenu: onContextMenu, className: 'town' + (selected ? ' selected-Town' : ''), viewBox: '0 20 300 260', fill: color, width: Tile_1.TILE_WIDTH * 9 / 10, style: lodash_1.assign({}, Tile_1.getTilePosition(town.tile), { padding: Tile_1.TILE_WIDTH * 1 / 20 })}, React.createElement("polygon", {points: '300,150 225,280 75,280 0,150 75,20 225,20', stroke: 'blue', strokeWidth: 20}), React.createElement("text", {fontSize: 40, alignmentBaseline: 'middle', x: '50%', y: '50%', textAnchor: 'middle', fill: 'black'}, town.name), ";"));
+	exports.TownComponent = ({ town, onContextMenu, onClick, color, selected }) => (React.createElement("svg", {onContextMenu: onContextMenu, onClick: onClick, className: 'town' + (selected ? ' selected-Town' : ''), viewBox: '0 20 300 260', fill: color, width: Tile_1.TILE_WIDTH * 9 / 10, style: lodash_1.assign({}, Tile_1.getTilePosition(town.tile), { padding: Tile_1.TILE_WIDTH * 1 / 20 })}, React.createElement("polygon", {points: '300,150 225,280 75,280 0,150 75,20 225,20', stroke: 'blue', strokeWidth: 20}), React.createElement("text", {fontSize: 40, alignmentBaseline: 'middle', x: '50%', y: '50%', textAnchor: 'middle', fill: 'black'}, town.name), ";"));
 
 
 /***/ },

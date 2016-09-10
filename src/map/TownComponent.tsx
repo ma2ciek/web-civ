@@ -8,10 +8,11 @@ interface TownComponentProps {
     onContextMenu: Function;
     color: string;
     selected: boolean;
+    onClick: Function;
 }
 
-export const TownComponent = ({ town, onContextMenu, color, selected }: TownComponentProps) => (
-    <svg onContextMenu={onContextMenu}
+export const TownComponent = ({ town, onContextMenu, onClick, color, selected }: TownComponentProps) => (
+    <svg onContextMenu={onContextMenu} onClick={ onClick }
         className={ 'town' + (selected ? ' selected-Town' : '') }
         viewBox='0 20 300 260'
         fill={ color }

@@ -8,6 +8,7 @@ import {
     MAYBE_MOVE_BY,
     CREATE_CITY,
     SELECT_UNIT,
+    SELECT_TOWN,
 } from './actions';
 import { generateTiles } from './generators/generateTiles';
 import { generatePlayers } from './generators/generatePlayers';
@@ -84,6 +85,15 @@ export default handleActions<AppState, any>({
         return assign({}, state, {
             selected: {
                 type: 'unit',
+                id: action.payload.id,
+            },
+        });
+    },
+
+     [SELECT_TOWN]: (state, action) => {
+        return assign({}, state, {
+            selected: {
+                type: 'town',
                 id: action.payload.id,
             },
         });

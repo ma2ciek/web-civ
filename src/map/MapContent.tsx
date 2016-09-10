@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { AppState, Player, Camera, Selected } from '../AppState';
-import { maybeMoveCurrentUnit, selectUnit } from '../actions';
+import { maybeMoveCurrentUnit, selectUnit, selectTown } from '../actions';
 import { getTilePosition, isTileVisible, TILE_WIDTH, TILE_HEIGHT } from '../Tile';
 import { FadeAnimate } from '../animations';
 import { PLAYER_COLORS } from '../constants';
@@ -55,9 +55,11 @@ const _MapContent = ({ camera, players, currentPlayerIndex, dispatch, selected }
                                 selected={ player.id === currentPlayer.id && selected.id === unit.id }
                                 color={ PLAYER_COLORS[player.id]}
                                 onContextMenu={() => { } }
-                                onClick={ () => { if(unit.ownerId === currentPlayer.id) {
-                                    dispatch(selectUnit(unit));
-                                } } }/>
+                                onClick={ () => {
+                                    if (unit.ownerId === currentPlayer.id) {
+                                        dispatch(selectUnit(unit));
+                                    }
+                                } }/>
                         );
                     })
             ) }
@@ -73,7 +75,12 @@ const _MapContent = ({ camera, players, currentPlayerIndex, dispatch, selected }
                                     key={ town.id }
                                     selected={ player.id === currentPlayer.id && selected.id === town.id }
                                     color={ PLAYER_COLORS[playerIndex]}
-                                    onContextMenu={() => { } }/>
+                                    onContextMenu={() => { } }
+                                    onClick={() => {
+                                        if (town.ownerId === currentPlayer.id) {
+                                            dispatch(selectTown(town));
+                                        }
+                                    } }/>
                             );
                         })
                 ) }

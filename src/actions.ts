@@ -1,5 +1,5 @@
 import { createAction } from 'redux-actions';
-import { Unit, Position } from './AppState';
+import { Unit, Position, Town } from './AppState';
 
 export const GENERATE_MAP = 'GENERATE_MAP';
 export const GENERATE_PLAYERS = 'GENERATE_PLAYERS';
@@ -23,3 +23,6 @@ export const createCity = createAction(CREATE_CITY);
 
 export const SELECT_UNIT = 'SELECT_UNIT';
 export const selectUnit = createAction(SELECT_UNIT, (unit: Unit) => unit);
+
+export const SELECT_TOWN = 'SELECT_TOWN';
+export const selectTown = createAction(SELECT_TOWN, (town: Town) => town);
