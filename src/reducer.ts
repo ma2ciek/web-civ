@@ -1,6 +1,14 @@
-import { AppState } from './AppState';
+import { AppState, Player, Unit, Town, Selected, Position} from './AppState';
 import { handleActions } from 'redux-actions';
-import { GENERATE_MAP, GENERATE_PLAYERS, MOVE_CAMERA, NEXT_TURN, MAYBE_MOVE_BY } from './actions';
+import {
+    GENERATE_MAP,
+    GENERATE_PLAYERS,
+    MOVE_CAMERA,
+    NEXT_TURN,
+    MAYBE_MOVE_BY,
+    CREATE_CITY,
+    SELECT_UNIT,
+} from './actions';
 import { generateTiles } from './generators/generateTiles';
 import { generatePlayers } from './generators/generatePlayers';
 import { getTilePosition, getSurroundingTiles } from './Tile';
@@ -13,98 +21,168 @@ const initialState: AppState = {
     players: [],
     turn: 0,
     currentPlayerIndex: 0,
-    mapWidth: 30,
-    mapHeight: 30,
-    playersAmount: 8,
     camera: {
-        x: 0,
-        y: 0,
+        left: 0,
+        top: 0,
         zoom: 1,
     },
-    selectedUnitIndex: 0,
+    selected: {
+        type: 'none',
+        id: 0,
+    },
 };
 
 
 export default handleActions<AppState, any>({
     [GENERATE_MAP]: state => assign({}, state, {
-        tiles: generateTiles({ width: state.mapWidth, height: state.mapHeight }),
+        tiles: generateTiles(),
     }),
 
     [GENERATE_PLAYERS]: state => {
-        const players = generatePlayers({ tiles: state.tiles, playersAmount: state.playersAmount })
+        const players = generatePlayers({ tiles: state.tiles })
             .map(p => assign({}, p, {
-                seenTiles: getSurroundingTiles(state.tiles, p.units.map(u => u.tile), state.mapWidth, state.mapHeight),
+                seenTiles: uniq(getSurroundingTiles(state.tiles, p.units.map(u => u.tile))),
             }));
-
-        console.log(players);
 
         const currentPlayer = players[0];
         const selectedUnit = currentPlayer.units[0];
         const firstUnitTile = getTilePosition(selectedUnit.tile);
 
         return assign({}, state, {
-            selectedUnitIndex: 0,
+            selected: {
+                type: 'unit',
+                id: selectedUnit.id,
+            },
             players,
             currentPlayer,
-            camera: assign({}, state.camera, {
-                x: firstUnitTile.left,
-                y: firstUnitTile.top,
-            }),
+            camera: assign({}, state.camera, firstUnitTile),
         });
     },
 
     [MOVE_CAMERA]: (state, action) => assign({}, state, {
         camera: assign({}, state.camera, {
-            x: state.camera.x + action.payload.x,
-            y: state.camera.y + action.payload.y,
+            left: state.camera.left + action.payload.left,
+            top: state.camera.top + action.payload.top,
         }),
     }),
 
     [NEXT_TURN]: state => {
-        const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.playersAmount;
+        const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
         const nextPlayer = state.players[nextPlayerIndex];
-        const selectedUnit = nextPlayer.units[0];
-        const firstUnitTile = getTilePosition(selectedUnit.tile);
+
+        const {selected, tilePosition } = getSelected(nextPlayer);
 
         return assign({}, state, {
-            selectedUnitIndex: 0,
+            selected: selected,
             currentPlayerIndex: nextPlayerIndex,
             turn: state.turn + (nextPlayerIndex === 0 ? 1 : 0),
-            camera: assign({}, state.camera, {
-                x: firstUnitTile.left,
-                y: firstUnitTile.top,
-            }),
+            camera: tilePosition ? assign({}, state.camera, tilePosition) : state.camera,
+        });
+    },
+
+    [SELECT_UNIT]: (state, action) => {
+        return assign({}, state, {
+            selected: {
+                type: 'unit',
+                id: action.payload.id,
+            },
         });
     },
 
     [MAYBE_MOVE_BY]: (state, action) => {
         // TODO - check if unit can move
+
+        state = updateSelectedUnit(state, unit => ({
+            tile: action.payload.tile,
+        }));
+
         const currentPlayer = state.players[state.currentPlayerIndex];
 
-        const currentPlayerAfterMovedUnit = assign({}, currentPlayer, {
-            units: currentPlayer.units.map((u, index) => index === state.selectedUnitIndex ?
-                assign({}, u, {
-                    tile: action.payload.tile,
-                }) : u
-            ),
-        });
-
-        const currentPlayerAfterSeenTiles = assign({}, currentPlayerAfterMovedUnit, {
+        return updateCurrentPlayer(state, p => assign({}, state, {
             seenTiles: uniq([
                 ...currentPlayer.seenTiles,
                 ...getSurroundingTiles(
                     state.tiles,
-                    currentPlayerAfterMovedUnit.units.map(u => u.tile),
-                    state.mapWidth,
-                    state.mapHeight
+                    currentPlayer.units.map(u => u.tile)
                 ),
             ]),
+        }));
+    },
+
+    [CREATE_CITY]: (state, action) => {
+        const { tile } = state.players[state.currentPlayerIndex].units
+            .filter(unit => unit.id === state.selected.id)[0];
+
+        const playerId = state.players[state.currentPlayerIndex].id;
+
+        const town: Town = {
+            tile: assign({}, tile, { ownerId: playerId }),
+            ownerId: playerId,
+            id: Math.random(),
+            name: 'Unnamed town',
+            buildings: [],
+        };
+
+        state = updateCurrentPlayer(state, p => ({
+            units: p.units.filter(u => u.id !== state.selected.id),
+            towns: [...p.towns, {
+                tile: assign({}, tile, { ownerId: p.id }),
+                ownerId: p.id,
+                id: Math.random(),
+                name: 'Unnamed town',
+                buildings: [],
+            }],
+        }));
+
+        return assign({}, state, {
+            selected: assign({}, state.selected, {
+                type: 'town',
+                id: town.id,
+            }),
         });
-
-        const players = state.players
-            .map((p, index) => index === state.currentPlayerIndex ? currentPlayerAfterSeenTiles : p);
-
-        return assign({}, state, { players });
     },
 
 }, initialState);
+
+function updateCurrentPlayer(state: AppState, fn: (p: Player) => {}) {
+    return assign({}, state, {
+        players: state.players
+            .map((p, id) =>
+                id === state.currentPlayerIndex ?
+                    assign({}, p, fn(p)) : p
+            ),
+    });
+}
+
+function updateSelectedUnit(state: AppState, fn: (unit: Unit) => {}) {
+    return updateCurrentPlayer(state, p => ({
+        units: p.units.map(unit =>
+            unit.id === state.selected.id && state.selected.type === 'unit' ?
+                assign({}, unit, fn(unit)) : unit
+        ),
+    }));
+}
+
+interface Output {
+    selected: Selected;
+    tilePosition: Position;
+}
+
+function getSelected(player: Player): Output {
+    const units = player.units;
+    const towns = player.towns;
+
+    return (units.length > 0) ? ({
+        selected: {
+            type: 'unit',
+            id: units[0].id,
+        },
+        tilePosition: getTilePosition(units[0].tile)
+    }) : ({
+        selected: {
+            type: 'town',
+            id: towns[0].id,
+        },
+        tilePosition: getTilePosition(towns[0].tile)
+    });
+}

@@ -1,23 +1,24 @@
 import { Tile, Camera } from './AppState';
+import { MAP_HEIGHT } from './constants';
 
 export const TILE_HEIGHT = 100 * Math.sqrt(3) / 2;
 export const TILE_WIDTH = 100;
 
 export function getTilePosition(tile: Tile) {
-    return tile.position.x % 2 == 0 ? ({
-        left: tile.position.x * TILE_WIDTH * 3 / 4,
-        top: tile.position.y * TILE_HEIGHT,
+    return tile.position.left % 2 === 0 ? ({
+        left: tile.position.left * TILE_WIDTH * 3 / 4,
+        top: tile.position.top * TILE_HEIGHT,
     }) : ({
-        left: tile.position.x * TILE_WIDTH * 3 / 4,
-        top: tile.position.y * TILE_HEIGHT + TILE_HEIGHT / 2,
+        left: tile.position.left * TILE_WIDTH * 3 / 4,
+        top: tile.position.top * TILE_HEIGHT + TILE_HEIGHT / 2,
     });
 }
 
 export function isTileVisible(tile: Tile, camera: Camera) {
     const position = getTilePosition(tile);
 
-    const left = position.left - camera.x + window.innerWidth / 2 - TILE_WIDTH / 2;
-    const top = position.top - camera.y + window.innerHeight / 2 - TILE_HEIGHT / 2;
+    const left = position.left - camera.left + window.innerWidth / 2 - TILE_WIDTH / 2;
+    const top = position.top - camera.top + window.innerHeight / 2 - TILE_HEIGHT / 2;
 
     return (
         left < window.innerWidth &&
@@ -27,7 +28,7 @@ export function isTileVisible(tile: Tile, camera: Camera) {
     );
 }
 
-export function getSurroundingTiles(allTiles: Tile[], tiles: Tile[], mapWidth: number, mapHeight: number) {
+export function getSurroundingTiles(allTiles: Tile[], tiles: Tile[]) {
     const surroundingTiles: Tile[] = [];
     for (const tile of tiles) {
         // TODO - more tiles + filter duplicates.
@@ -35,15 +36,15 @@ export function getSurroundingTiles(allTiles: Tile[], tiles: Tile[], mapWidth: n
         surroundingTiles.push(allTiles[tile.id - 1]);
         surroundingTiles.push(allTiles[tile.id + 1]);
 
-        surroundingTiles.push(allTiles[tile.id - mapHeight]);
-        surroundingTiles.push(allTiles[tile.id + mapHeight]);
+        surroundingTiles.push(allTiles[tile.id - MAP_HEIGHT]);
+        surroundingTiles.push(allTiles[tile.id + MAP_HEIGHT]);
 
-        if (tile.position.x % 2 == 0) {
-            surroundingTiles.push(allTiles[tile.id - mapHeight - 1]);
-            surroundingTiles.push(allTiles[tile.id + mapHeight - 1]);
+        if (tile.position.left % 2 === 0) {
+            surroundingTiles.push(allTiles[tile.id - MAP_HEIGHT - 1]);
+            surroundingTiles.push(allTiles[tile.id + MAP_HEIGHT - 1]);
         } else {
-            surroundingTiles.push(allTiles[tile.id - mapHeight + 1]);
-            surroundingTiles.push(allTiles[tile.id + mapHeight + 1]);
+            surroundingTiles.push(allTiles[tile.id - MAP_HEIGHT + 1]);
+            surroundingTiles.push(allTiles[tile.id + MAP_HEIGHT + 1]);
         }
     }
 

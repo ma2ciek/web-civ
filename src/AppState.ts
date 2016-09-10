@@ -3,16 +3,18 @@ export interface AppState {
     players: Player[];
     turn: number;
     currentPlayerIndex: number;
-    mapWidth: number;
-    mapHeight: number;
-    playersAmount: number;
     camera: Camera;
-    selectedUnitIndex: number;
+    selected: Selected;
+}
+
+export interface Selected {
+    type: string;
+    id: number;
 }
 
 export interface Tile {
     id: number;
-    owner: Player;
+    ownerId: number;
     position: Position;
     type: string;
 }
@@ -23,18 +25,33 @@ export interface Player {
     seenTiles: Tile[];
     nation: string;
     units: Unit[];
+    towns: Town[];
 }
 
 export interface Unit {
     tile: Tile;
     name: string;
+    id: number;
+    ownerId: number;
 }
 
 export interface Camera extends Position {
     zoom: number;
 }
 
-interface Position {
-    x: number;
-    y: number;
+export interface Position {
+    left: number;
+    top: number;
+}
+
+export interface Town {
+    ownerId: number;
+    id: number;
+    tile: Tile;
+    buildings: Building[];
+    name: string;
+}
+
+export interface Building {
+    name: string;
 }

@@ -1,5 +1,7 @@
 body {
     margin: 0;
+    font-family: Verdana, Lato;
+    box-sizing: border-box;
 }
 
 .app {
@@ -19,56 +21,134 @@ body {
     position: relative;
 }
 
-.tile {
+.map svg.town {
+    position: absolute;
+    cursor: pointer;    
+}
+
+.map svg.unit {
+    position: absolute;
+    transition: all 0.5s ease;
+    cursor: pointer;
+}
+
+.map svg.selected-unit polygon {
+    stroke-width: 10px;
+    stroke: gold;
+}
+
+
+.map svg.tile {
     position: absolute;
 }
 
-.unit {
-    position: absolute;
-}
-
-.unit polygon {
-    fill: red;
-}
-
-.my-unit polygon {
-    fill: green;
-}
-
-.tile polygon {
+.map svg.tile polygon {
     fill: #eee;
     stroke-width: 1px;
     stroke: #555;
 }
 
-.tile polygon:hover {
+.map svg.tile polygon:hover {
     fill: #09f;
 }
 
-.bottom-menu {
+
+/* Top menu */
+
+.top-menu {
     position: absolute;
-    bottom: 0;
+    top: 0;
     width: 100%;
     color: white;
     background: #333;
+    display: flex;
+    align-items: center;
+}
+
+.top-menu span {
+    padding: 0 10px;
+}
+
+.top-menu .current-player {
+    min-width: 180px;
+}
+
+.top-menu .current-turn {
+    min-width: 80px;
+}
+
+.top-menu svg {
+    fill: white;
+    height: 30px;
 }
 
 
+/* Unit side menu */
+
+.unit-side-menu {
+    z-index: 10;
+    position: absolute;
+    padding: 10px 20px 20px;
+    background: repeating-linear-gradient(-45deg, #606dbc, #606dbc 10px, #465298 0, #465298 20px);
+    border-left: 1px solid rgba(0, 50, 100, 0.8);
+    right: 0;
+    top: 0;
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+.unit-side-menu h2 {
+    margin: 0;
+    padding: 10px 0;
+    text-align: center;
+    color: #fff;
+}
+
+.unit-side-menu .option {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.unit-side-menu .option svg {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    padding: 10%;
+    fill: #fff;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    background: #465298;
+    transition: all 0.15s ease-in-out;
+}
+
+.unit-side-menu .option:hover svg {
+    /*fill: #e4820a;
+    background: #fff;
+    box-shadow: 0 0 3px #e4820a, 0 0 2px #e4820a;*/
+    background: #e4820a;
+}
+
+
+/* Animations */
 
 .fade-enter {
-  opacity: 0.01;
+    opacity: 0.01;
 }
 
 .fade-enter.fade-enter-active {
-  opacity: 1;
-  transition: opacity 500ms ease-in;
+    opacity: 1;
+    transition: opacity 500ms ease-in;
 }
 
 .fade-leave {
-  opacity: 1;
+    opacity: 1;
 }
 
 .fade-leave.fade-leave-active {
-  opacity: 0.01;
-  transition: opacity 300ms ease-in;
+    opacity: 0.01;
+    transition: opacity 300ms ease-in;
 }

@@ -1,9 +1,5 @@
 import { Tile } from '../AppState';
-
-interface TileGeneratorProps {
-    height: number;
-    width: number;
-}
+import { MAP_WIDTH, MAP_HEIGHT } from '../constants';
 
 enum TileTypes {
     Water,
@@ -11,19 +7,19 @@ enum TileTypes {
     Desert
 }
 
-export function generateTiles({ width, height }: TileGeneratorProps) {
+export function generateTiles() {
     const tiles: Tile[] = [];
     let nextId = 0;
 
-    for (let i = 0; i < width; i++) {
-        for (let j = 0; j < height; j++) {
+    for (let i = 0; i < MAP_WIDTH; i++) {
+        for (let j = 0; j < MAP_HEIGHT; j++) {
             tiles.push({
                 position: {
-                    x: i,
-                    y: j,
+                    left: i,
+                    top: j,
                 },
                 id: nextId++,
-                owner: null,
+                ownerId: -1,
                 type: '',
             });
         }
