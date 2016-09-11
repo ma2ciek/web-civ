@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Tile } from '../AppState';
-import { getTilePosition } from '../Tile';
+import { getTilePosition } from '../tile-utils';
 import { Hex } from './Hex';
 
 interface TileContentProps {
@@ -10,7 +10,7 @@ interface TileContentProps {
 }
 
 export function TileComponent({ tile, onContextMenu, scale }: TileContentProps) {
-    const { left, top } = getTilePosition(tile, scale);
+    const { left, top } = getTilePosition(tile.id, scale);
 
     return (
         <g onContextMenu={() => onContextMenu() } className='tile'

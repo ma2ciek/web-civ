@@ -2,8 +2,15 @@
     width: 100%;
     height: 100%;
     
+
     g.town {
         cursor: pointer;    
+        overflow: visible;        
+
+        &.selected polygon {
+            stroke-width: 10px;
+            stroke: gold;
+        }
     }
 
     g.unit {
@@ -27,5 +34,9 @@
             stroke-width: 1px;
             stroke: #555;
         }
+    }
+
+    circle.move-marker {
+        pointer-events: none;
     }
 }

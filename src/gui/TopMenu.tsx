@@ -23,7 +23,7 @@ const _TopMenu = ({ turn, players, currentPlayerIndex, dispatch }: TopMenuProps)
         <div className='top-menu'>
             <span className='current-player'>{'Current player: ' + PLAYER_COLORS[currentPlayer.id]}</span>
             <span className='current-turn'>{'Turn: ' + turn}</span>
-            <a onClick={() => dispatch(nextTurn())}><IconReload /></a>
+            <a href='#' title='Next turn' onClick={() => dispatch(nextTurn())}><IconReload /></a>
         </div>
     );
 };

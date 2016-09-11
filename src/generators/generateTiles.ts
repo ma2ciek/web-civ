@@ -2,12 +2,6 @@ import { Tile } from '../AppState';
 import { MAP_WIDTH, MAP_HEIGHT } from '../constants';
 import { getRandomType } from '../utils';
 
-const tileTypeChances = [
-    { type: 'grass', chance: 5 },
-    { type: 'forest', chance: 2 },
-    { type: 'water', chance: 1 },
-];
-
 export function generateTiles() {
     const tiles: Tile[] = [];
     let nextId = 0;
@@ -21,7 +15,7 @@ export function generateTiles() {
                 },
                 id: nextId++,
                 ownerId: -1,
-                type: getRandomType(tileTypeChances),
+                type: getRandomType(),
             });
         }
     }

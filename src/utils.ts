@@ -1,12 +1,16 @@
-export function getRandomType(chanceList: { type: string, chance: number }[]) {
-    const multiplier = 1 / chanceList.map(t => t.chance).reduce((sum, x) => sum + x, 0);
+import { tileTypes } from './constants';
+
+export function getRandomType() {
+    const tileNames = Object.keys(tileTypes);
+
+    const multiplier = 1 / tileNames.map(t => tileTypes[t].chance).reduce((sum, x) => sum + x, 0);
 
     let random = Math.random();
 
-    for (const t of chanceList) {
-        if (random < t.chance * multiplier)
-            return t.type;
+    for (const t of tileNames) {
+        if (random < tileTypes[t].chance * multiplier)
+            return t;
 
-        random -= t.chance * multiplier;
+        random -= tileTypes[t].chance * multiplier;
     }
 }

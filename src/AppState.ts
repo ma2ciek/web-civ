@@ -4,11 +4,11 @@ export interface AppState {
     turn: number;
     currentPlayerIndex: number;
     camera: Camera;
-    selected: Selected;
+    selection: Selection;
 }
 
-export interface Selected {
-    type: string;
+export interface Selection {
+    type: 'unit' | 'town' | 'none';
     id: number;
 }
 
@@ -22,17 +22,19 @@ export interface Tile {
 export interface Player {
     id: number;
     isHuman: boolean;
-    seenTiles: Tile[];
+    seenTileIds: number[];
     nation: string;
     units: Unit[];
     towns: Town[];
 }
 
 export interface Unit {
-    tile: Tile;
+    tileId: number;
     name: string;
     id: number;
     ownerId: number;
+    movement: number;
+    movementLeft: number;
 }
 
 export interface Camera extends Position {

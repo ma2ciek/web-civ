@@ -51,11 +51,12 @@
 	const redux_1 = __webpack_require__(193);
 	const reducer_1 = __webpack_require__(210);
 	const App_1 = __webpack_require__(367);
-	__webpack_require__(377);
+	__webpack_require__(382);
 	const store = redux_1.createStore(reducer_1.default);
 	ReactDOM.render(React.createElement(react_redux_1.Provider, {store: store}, 
 	    React.createElement(App_1.default, null)
 	), document.getElementById('root'));
+	window.getState = store.getState;
 
 
 /***/ },
@@ -25426,9 +25427,11 @@
 	const actions_1 = __webpack_require__(360);
 	const generateTiles_1 = __webpack_require__(361);
 	const generatePlayers_1 = __webpack_require__(364);
-	const Tile_1 = __webpack_require__(365);
+	const tile_utils_1 = __webpack_require__(365);
 	const lodash_1 = __webpack_require__(366);
-	const assign = Object.assign;
+	function join(x, y) {
+	    return Object.assign({}, x, y);
+	}
 	const initialState = {
 	    tiles: [],
 	    players: [],
@@ -25437,38 +25440,39 @@
 	    camera: {
 	        left: 0,
 	        top: 0,
-	        zoom: 1,
+	        zoom: 0.3,
 	    },
-	    selected: {
+	    selection: {
 	        type: 'none',
 	        id: 0,
 	    },
 	};
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.default = redux_actions_1.handleActions({
-	    [actions_1.GENERATE_MAP]: state => assign({}, state, {
+	    [actions_1.GENERATE_MAP]: state => join(state, {
 	        tiles: generateTiles_1.generateTiles(),
 	    }),
 	    [actions_1.GENERATE_PLAYERS]: state => {
-	        const players = generatePlayers_1.generatePlayers({ tiles: state.tiles })
-	            .map(p => assign({}, p, {
-	            seenTiles: lodash_1.uniq(Tile_1.getSurroundingTiles(state.tiles, p.units.map(u => u.tile))),
+	        const players = generatePlayers_1.generatePlayers({ allTiles: state.tiles })
+	            .map(p => join(p, {
+	            seenTileIds: lodash_1.uniq(tile_utils_1.getSurroundingTiles({
+	                allTiles: state.tiles,
+	                tiles: p.units.map(u => state.tiles[u.tileId]),
+	            })).map(t => t.id),
 	        }));
-	        const currentPlayer = players[0];
-	        const selectedUnit = currentPlayer.units[0];
-	        const firstUnitTile = Tile_1.getTilePosition(selectedUnit.tile, state.camera.zoom);
-	        return assign({}, state, {
-	            selected: {
+	        const selectedUnit = players[0].units[0];
+	        const firstUnitTile = tile_utils_1.getTilePosition(selectedUnit.tileId, state.camera.zoom);
+	        return join(state, {
+	            selection: {
 	                type: 'unit',
 	                id: selectedUnit.id,
 	            },
 	            players,
-	            currentPlayer,
-	            camera: assign({}, state.camera, firstUnitTile),
+	            camera: join(state.camera, firstUnitTile),
 	        });
 	    },
-	    [actions_1.MOVE_CAMERA]: (state, action) => assign({}, state, {
-	        camera: assign({}, state.camera, {
+	    [actions_1.MOVE_CAMERA]: (state, action) => join(state, {
+	        camera: join(state.camera, {
 	            left: state.camera.left + action.payload.left,
 	            top: state.camera.top + action.payload.top,
 	        }),
@@ -25476,66 +25480,84 @@
 	    [actions_1.NEXT_TURN]: state => {
 	        const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
 	        const nextPlayer = state.players[nextPlayerIndex];
-	        const { selected, tilePosition } = getSelected(nextPlayer, state.camera.zoom);
-	        return assign({}, state, {
-	            selected: selected,
+	        const { selection, tilePosition } = getSelected(nextPlayer, state.camera.zoom);
+	        return join(state, {
+	            selection: selection,
 	            currentPlayerIndex: nextPlayerIndex,
 	            turn: state.turn + (nextPlayerIndex === 0 ? 1 : 0),
-	            camera: tilePosition ? assign({}, state.camera, tilePosition) : state.camera,
+	            camera: tilePosition ? join(state.camera, tilePosition) : state.camera,
+	            players: state.players.map(p => join(p, {
+	                units: p.units.map(unit => join(unit, {
+	                    movementLeft: unit.movement,
+	                })),
+	            })),
 	        });
 	    },
 	    [actions_1.SELECT_UNIT]: (state, action) => {
-	        return assign({}, state, {
-	            selected: {
+	        return join(state, {
+	            selection: {
 	                type: 'unit',
 	                id: action.payload.id,
 	            },
 	        });
 	    },
 	    [actions_1.SELECT_TOWN]: (state, action) => {
-	        return assign({}, state, {
-	            selected: {
+	        return join(state, {
+	            selection: {
 	                type: 'town',
 	                id: action.payload.id,
 	            },
 	        });
 	    },
 	    [actions_1.MAYBE_MOVE_BY]: (state, action) => {
-	        // TODO - check if unit can move
+	        if (state.selection.type !== 'unit')
+	            return state;
+	        let currentPlayer = state.players[state.currentPlayerIndex];
+	        const activeUnit = getActiveUnit(state);
+	        const movementAvailableMap = tile_utils_1.getAvailableMoves(state.tiles[activeUnit.tileId], currentPlayer.seenTileIds.map(id => state.tiles[id]), activeUnit.movementLeft);
+	        if (movementAvailableMap.length === 0)
+	            return state;
+	        const result = movementAvailableMap.filter(map => map.tile === state.tiles[action.payload.tileId]);
+	        if (result.length === 0)
+	            return state;
 	        state = updateSelectedUnit(state, unit => ({
-	            tile: action.payload.tile,
+	            tileId: action.payload.tileId,
+	            movementLeft: result[0].movementLeft,
 	        }));
-	        const currentPlayer = state.players[state.currentPlayerIndex];
-	        return updateCurrentPlayer(state, p => assign({}, state, {
-	            seenTiles: lodash_1.uniq([
-	                ...currentPlayer.seenTiles,
-	                ...Tile_1.getSurroundingTiles(state.tiles, currentPlayer.units.map(u => u.tile)),
+	        currentPlayer = state.players[state.currentPlayerIndex];
+	        return updateCurrentPlayer(state, p => join(state, {
+	            seenTileIds: lodash_1.uniq([
+	                ...currentPlayer.seenTileIds,
+	                ...tile_utils_1.getSurroundingTiles({
+	                    allTiles: state.tiles,
+	                    tiles: currentPlayer.units.map(u => state.tiles[u.tileId]),
+	                }).map(t => t.id),
 	            ]),
 	        }));
 	    },
 	    [actions_1.CREATE_CITY]: (state, action) => {
-	        const { tile } = state.players[state.currentPlayerIndex].units
-	            .filter(unit => unit.id === state.selected.id)[0];
+	        const { tileId } = state.players[state.currentPlayerIndex].units
+	            .filter(unit => unit.id === state.selection.id)[0];
 	        const playerId = state.players[state.currentPlayerIndex].id;
 	        const town = {
-	            tile: assign({}, tile, { ownerId: playerId }),
+	            tile: join(state.tiles[tileId], { ownerId: playerId }),
 	            ownerId: playerId,
 	            id: Math.random(),
 	            name: 'Unnamed town',
 	            buildings: [],
 	        };
 	        state = updateCurrentPlayer(state, p => ({
-	            units: p.units.filter(u => u.id !== state.selected.id),
+	            units: p.units.filter(u => u.id !== state.selection.id),
 	            towns: [...p.towns, {
-	                    tile: assign({}, tile, { ownerId: p.id }),
+	                    tile: join(state.tiles[tileId], { ownerId: p.id }),
 	                    ownerId: p.id,
 	                    id: Math.random(),
 	                    name: 'Unnamed town',
 	                    buildings: [],
 	                }],
 	        }));
-	        return assign({}, state, {
-	            selected: assign({}, state.selected, {
+	        return join(state, {
+	            selection: join(state.selection, {
 	                type: 'town',
 	                id: town.id,
 	            }),
@@ -25543,8 +25565,9 @@
 	    },
 	    [actions_1.ZOOM_MAP]: (state, action) => {
 	        const change = (1 + action.payload * 0.03);
-	        return assign({}, state, {
-	            camera: assign({}, state.camera, {
+	        // TODO - min / max zoom
+	        return join(state, {
+	            camera: join(state.camera, {
 	                zoom: state.camera.zoom * change,
 	                left: state.camera.left * change,
 	                top: state.camera.top * change,
@@ -25553,34 +25576,40 @@
 	    },
 	}, initialState);
 	function updateCurrentPlayer(state, fn) {
-	    return assign({}, state, {
+	    return join(state, {
 	        players: state.players
 	            .map((p, id) => id === state.currentPlayerIndex ?
-	            assign({}, p, fn(p)) : p),
+	            join(p, fn(p)) : p),
 	    });
 	}
 	function updateSelectedUnit(state, fn) {
 	    return updateCurrentPlayer(state, p => ({
-	        units: p.units.map(unit => unit.id === state.selected.id && state.selected.type === 'unit' ?
-	            assign({}, unit, fn(unit)) : unit),
+	        units: p.units.map(unit => unit.id === state.selection.id && state.selection.type === 'unit' ?
+	            join(unit, fn(unit)) : unit),
 	    }));
 	}
 	function getSelected(player, tileWidth) {
 	    const units = player.units;
 	    const towns = player.towns;
+	    // TODO - index: 0 (?)
 	    return (units.length > 0) ? ({
-	        selected: {
+	        selection: {
 	            type: 'unit',
 	            id: units[0].id,
 	        },
-	        tilePosition: Tile_1.getTilePosition(units[0].tile, tileWidth),
+	        tilePosition: tile_utils_1.getTilePosition(units[0].tileId, tileWidth),
 	    }) : ({
-	        selected: {
+	        selection: {
 	            type: 'town',
 	            id: towns[0].id,
 	        },
-	        tilePosition: Tile_1.getTilePosition(towns[0].tile, tileWidth),
+	        tilePosition: tile_utils_1.getTilePosition(towns[0].tile.id, tileWidth),
 	    });
+	}
+	function getActiveUnit(state) {
+	    let currentPlayer = state.players[state.currentPlayerIndex];
+	    return currentPlayer.units
+	        .filter(u => u.id === state.selection.id)[0];
 	}
 
 
@@ -30777,7 +30806,7 @@
 	exports.generatePlayers = redux_actions_1.createAction(exports.GENERATE_PLAYERS);
 	exports.moveCamera = redux_actions_1.createAction(exports.MOVE_CAMERA, ({ left, top }) => ({ left, top }));
 	exports.nextTurn = redux_actions_1.createAction(exports.NEXT_TURN);
-	exports.maybeMoveCurrentUnit = redux_actions_1.createAction(exports.MAYBE_MOVE_BY, tile => ({ tile }));
+	exports.maybeMoveCurrentUnit = redux_actions_1.createAction(exports.MAYBE_MOVE_BY, (tile) => ({ tileId: tile.id }));
 	exports.CREATE_CITY = 'CREATE_CITY';
 	exports.createCity = redux_actions_1.createAction(exports.CREATE_CITY);
 	exports.SELECT_UNIT = 'SELECT_UNIT';
@@ -30795,11 +30824,6 @@
 	"use strict";
 	const constants_1 = __webpack_require__(362);
 	const utils_1 = __webpack_require__(363);
-	const tileTypeChances = [
-	    { type: 'grass', chance: 5 },
-	    { type: 'forest', chance: 2 },
-	    { type: 'water', chance: 1 },
-	];
 	function generateTiles() {
 	    const tiles = [];
 	    let nextId = 0;
@@ -30812,7 +30836,7 @@
 	                },
 	                id: nextId++,
 	                ownerId: -1,
-	                type: utils_1.getRandomType(tileTypeChances),
+	                type: utils_1.getRandomType(),
 	            });
 	        }
 	    }
@@ -30841,20 +30865,27 @@
 	exports.MAP_HEIGHT = 20;
 	exports.TILE_WIDTH = 300;
 	exports.TILE_HEIGH = 300 * Math.sqrt(3) / 2;
+	exports.tileTypes = {
+	    grass: { chance: 5, moveCost: 1 },
+	    forest: { chance: 2, moveCost: 1.5 },
+	    water: { chance: 1, moveCost: 1000 },
+	};
 
 
 /***/ },
 /* 363 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	function getRandomType(chanceList) {
-	    const multiplier = 1 / chanceList.map(t => t.chance).reduce((sum, x) => sum + x, 0);
+	const constants_1 = __webpack_require__(362);
+	function getRandomType() {
+	    const tileNames = Object.keys(constants_1.tileTypes);
+	    const multiplier = 1 / tileNames.map(t => constants_1.tileTypes[t].chance).reduce((sum, x) => sum + x, 0);
 	    let random = Math.random();
-	    for (const t of chanceList) {
-	        if (random < t.chance * multiplier)
-	            return t.type;
-	        random -= t.chance * multiplier;
+	    for (const t of tileNames) {
+	        if (random < constants_1.tileTypes[t].chance * multiplier)
+	            return t;
+	        random -= constants_1.tileTypes[t].chance * multiplier;
 	    }
 	}
 	exports.getRandomType = getRandomType;
@@ -30866,31 +30897,36 @@
 
 	"use strict";
 	const constants_1 = __webpack_require__(362);
-	const Tile_1 = __webpack_require__(365);
-	function generatePlayers({ tiles }) {
+	const tile_utils_1 = __webpack_require__(365);
+	function generatePlayers({ allTiles }) {
 	    const players = [];
 	    let nextId = 0;
 	    for (let i = 0; i < constants_1.PLAYERS_COUNT; i++) {
 	        const id = nextId++; // TODO
-	        const firstTile = tiles[Math.random() * tiles.length | 0];
-	        const around = Tile_1.getSurroundingTiles(tiles, [firstTile]);
+	        const firstTile = allTiles[Math.random() * allTiles.length | 0];
+	        const around = tile_utils_1.getSurroundingTiles({ allTiles, tiles: [firstTile] })
+	            .filter(t => t.id !== firstTile.id);
 	        const secondTile = around[Math.random() * around.length | 0];
 	        players.push({
 	            id,
 	            isHuman: true,
-	            seenTiles: [],
+	            seenTileIds: [],
 	            nation: '',
 	            towns: [],
 	            units: [({
 	                    name: 'settler',
-	                    tile: firstTile,
+	                    tileId: firstTile.id,
 	                    id: Math.random(),
 	                    ownerId: id,
+	                    movement: 2,
+	                    movementLeft: 2,
 	                }), ({
 	                    name: 'warrior',
-	                    tile: secondTile,
+	                    tileId: secondTile.id,
 	                    id: Math.random(),
 	                    ownerId: id,
+	                    movement: 3,
+	                    movementLeft: 3,
 	                })],
 	        });
 	    }
@@ -30905,22 +30941,25 @@
 
 	"use strict";
 	const constants_1 = __webpack_require__(362);
-	function getTilePosition(tile, zoom) {
+	const constants_2 = __webpack_require__(362);
+	function getTilePosition(tileId, zoom) {
 	    const tileWidth = zoom * constants_1.TILE_WIDTH;
 	    const tileHeight = zoom * constants_1.TILE_HEIGH;
-	    return tile.position.left % 2 === 0 ? ({
-	        left: tile.position.left * tileWidth * 3 / 4,
-	        top: tile.position.top * tileHeight,
+	    const top = tileId % constants_1.MAP_HEIGHT;
+	    const left = tileId / constants_1.MAP_HEIGHT | 0;
+	    return left % 2 === 0 ? ({
+	        left: left * tileWidth * 3 / 4,
+	        top: top * tileHeight,
 	    }) : ({
-	        left: tile.position.left * tileWidth * 3 / 4,
-	        top: tile.position.top * tileHeight + tileHeight / 2,
+	        left: left * tileWidth * 3 / 4,
+	        top: top * tileHeight + tileHeight / 2,
 	    });
 	}
 	exports.getTilePosition = getTilePosition;
 	function isTileVisible(tile, camera) {
 	    const tileWidth = camera.zoom * constants_1.TILE_WIDTH;
 	    const tileHeight = camera.zoom * constants_1.TILE_HEIGH;
-	    const position = getTilePosition(tile, camera.zoom);
+	    const position = getTilePosition(tile.id, camera.zoom);
 	    const left = position.left - camera.left + window.innerWidth / 2 - tileWidth / 2;
 	    const top = position.top - camera.top + window.innerHeight / 2 - tileHeight / 2;
 	    return (left < window.innerWidth &&
@@ -30929,27 +30968,57 @@
 	        top > -tileHeight);
 	}
 	exports.isTileVisible = isTileVisible;
-	function getSurroundingTiles(allTiles, tiles) {
+	function getSurroundingTiles({ allTiles, tiles }) {
 	    const surroundingTiles = [];
 	    for (const tile of tiles) {
 	        // TODO - more tiles + filter duplicates.
 	        surroundingTiles.push(tile);
-	        surroundingTiles.push(allTiles[tile.id - 1]);
-	        surroundingTiles.push(allTiles[tile.id + 1]);
-	        surroundingTiles.push(allTiles[tile.id - constants_1.MAP_HEIGHT]);
-	        surroundingTiles.push(allTiles[tile.id + constants_1.MAP_HEIGHT]);
+	        surroundingTiles.push(getTileById(allTiles, tile.id - 1));
+	        surroundingTiles.push(getTileById(allTiles, tile.id + 1));
 	        if (tile.position.left % 2 === 0) {
-	            surroundingTiles.push(allTiles[tile.id - constants_1.MAP_HEIGHT - 1]);
-	            surroundingTiles.push(allTiles[tile.id + constants_1.MAP_HEIGHT - 1]);
+	            surroundingTiles.push(getTileById(allTiles, tile.id - constants_1.MAP_HEIGHT - 1));
+	            surroundingTiles.push(getTileById(allTiles, tile.id + constants_1.MAP_HEIGHT - 1));
 	        }
 	        else {
-	            surroundingTiles.push(allTiles[tile.id - constants_1.MAP_HEIGHT + 1]);
-	            surroundingTiles.push(allTiles[tile.id + constants_1.MAP_HEIGHT + 1]);
+	            surroundingTiles.push(getTileById(allTiles, tile.id - constants_1.MAP_HEIGHT + 1));
+	            surroundingTiles.push(getTileById(allTiles, tile.id + constants_1.MAP_HEIGHT + 1));
 	        }
+	        surroundingTiles.push(getTileById(allTiles, tile.id - constants_1.MAP_HEIGHT));
+	        surroundingTiles.push(getTileById(allTiles, tile.id + constants_1.MAP_HEIGHT));
 	    }
 	    return surroundingTiles.filter(x => !!x);
 	}
 	exports.getSurroundingTiles = getSurroundingTiles;
+	function getAvailableTilesForUnit(unit, allTiles) {
+	    const tile = getTileById(allTiles, unit.tileId);
+	    return _.uniq(getAvailableMoves(tile, allTiles, unit.movementLeft).map(x => x.tile))
+	        .filter(t => t.id !== unit.tileId);
+	}
+	exports.getAvailableTilesForUnit = getAvailableTilesForUnit;
+	function getAvailableMoves(tile, allTiles, availableMovement) {
+	    // TODO: remove recursion and store data to provide better results
+	    const tiles = getSurroundingTiles({ tiles: [tile], allTiles })
+	        .filter(t => constants_2.tileTypes[t.type].moveCost <= availableMovement && t.id !== tile.id)
+	        .map(t => ({ tile: t, movementLeft: availableMovement - constants_2.tileTypes[t.type].moveCost }));
+	    const surroundingTiles = _.flatten(tiles.map(t => getAvailableMoves(t.tile, allTiles, availableMovement - constants_2.tileTypes[t.tile.type].moveCost)));
+	    return [...tiles, ...surroundingTiles];
+	}
+	exports.getAvailableMoves = getAvailableMoves;
+	function haveTileBeenSeenByPlayer(tile, player) {
+	    return player.seenTileIds.indexOf(tile.id) > -1;
+	}
+	exports.haveTileBeenSeenByPlayer = haveTileBeenSeenByPlayer;
+	function getTileById(tiles, id) {
+	    return tiles.filter(t => t.id === id)[0];
+	}
+	function getMovementLeft(tile1, tile2, availableTiles, maxDistance) {
+	    const r = getAvailableMoves(tile1, availableTiles, maxDistance); // TODO;
+	    const res = r.filter(x => x.tile === tile2);
+	    if (res.length === 0)
+	        return -1;
+	    return res[0].movementLeft;
+	}
+	exports.getMovementLeft = getMovementLeft;
 
 
 /***/ },
@@ -47702,7 +47771,7 @@
 	const actions_1 = __webpack_require__(360);
 	const TopMenu_1 = __webpack_require__(368);
 	const AnimatedMap_1 = __webpack_require__(370);
-	const UnitMenu_1 = __webpack_require__(376);
+	const UnitMenu_1 = __webpack_require__(381);
 	class App extends React.Component {
 	    constructor(props) {
 	        super();
@@ -47738,7 +47807,7 @@
 	    return (React.createElement("div", {className: 'top-menu'}, 
 	        React.createElement("span", {className: 'current-player'}, 'Current player: ' + constants_1.PLAYER_COLORS[currentPlayer.id]), 
 	        React.createElement("span", {className: 'current-turn'}, 'Turn: ' + turn), 
-	        React.createElement("a", {onClick: () => dispatch(actions_1.nextTurn())}, 
+	        React.createElement("a", {href: '#', title: 'Next turn', onClick: () => dispatch(actions_1.nextTurn())}, 
 	            React.createElement(icons_1.IconReload, null)
 	        )));
 	};
@@ -47846,49 +47915,32 @@
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
-	const actions_1 = __webpack_require__(360);
-	const Tile_1 = __webpack_require__(365);
 	const constants_1 = __webpack_require__(362);
-	const UnitComponent_1 = __webpack_require__(372);
-	const TownComponent_1 = __webpack_require__(374);
-	const TileComponent_1 = __webpack_require__(375);
-	const Patterns_1 = __webpack_require__(381);
-	const _MapContent = ({ camera, players, currentPlayerIndex, dispatch, selected, zoom }) => {
+	const Patterns_1 = __webpack_require__(372);
+	const Units_1 = __webpack_require__(373);
+	const Towns_1 = __webpack_require__(376);
+	const Tiles_1 = __webpack_require__(378);
+	const SelectedUnitMovement_1 = __webpack_require__(380);
+	function _MapContent({ camera, players, currentPlayerIndex }) {
 	    const currentPlayer = players[currentPlayerIndex];
 	    const transform = ('translate(' +
-	        (-camera.left + window.innerWidth / 2 - constants_1.TILE_WIDTH * zoom / 2) + ' ' +
-	        (-camera.top + window.innerHeight / 2 - constants_1.TILE_HEIGH * zoom / 2) + ')');
+	        (-camera.left + window.innerWidth / 2 - constants_1.TILE_WIDTH * camera.zoom / 2) + ' ' +
+	        (-camera.top + window.innerHeight / 2 - constants_1.TILE_HEIGH * camera.zoom / 2) + ')');
 	    if (!currentPlayer)
 	        return null;
 	    return (React.createElement("svg", {width: '100%', height: '100vh'}, 
 	        React.createElement(Patterns_1.Patterns, null), 
 	        React.createElement("g", {transform: transform}, 
-	            currentPlayer && currentPlayer.seenTiles.filter(tile => Tile_1.isTileVisible(tile, camera)).map(tile => React.createElement(TileComponent_1.TileComponent, {tile: tile, key: tile.id, scale: zoom, onContextMenu: () => dispatch(actions_1.maybeMoveCurrentUnit(tile))})), 
-	            players.map(player => player.units
-	                .filter(unit => currentPlayer.seenTiles.map(t => t.id).indexOf(unit.tile.id) > -1)
-	                .map(unit => {
-	                return (React.createElement(UnitComponent_1.UnitComponent, {unit: unit, scale: zoom, key: unit.id, selected: player.id === currentPlayer.id && selected.id === unit.id, onContextMenu: () => { }, onClick: () => {
-	                    if (unit.ownerId === currentPlayer.id) {
-	                        dispatch(actions_1.selectUnit(unit));
-	                    }
-	                }}));
-	            })), 
-	            players.map((player, playerIndex) => player.towns
-	                .filter(town => currentPlayer.seenTiles.map(t => t.id).indexOf(town.tile.id) > -1)
-	                .map(town => {
-	                return (React.createElement(TownComponent_1.TownComponent, {town: town, scale: zoom, key: town.id, selected: player.id === currentPlayer.id && selected.id === town.id, onContextMenu: () => { }, onClick: () => {
-	                    if (town.ownerId === currentPlayer.id) {
-	                        dispatch(actions_1.selectTown(town));
-	                    }
-	                }}));
-	            })))));
-	};
+	            React.createElement(Tiles_1.Tiles, null), 
+	            React.createElement(Towns_1.Towns, null), 
+	            React.createElement(Units_1.Units, null), 
+	            React.createElement(SelectedUnitMovement_1.SelectedUnitMovement, null))));
+	}
+	;
 	exports.MapContent = react_redux_1.connect((state) => ({
 	    currentPlayerIndex: state.currentPlayerIndex,
 	    players: state.players,
 	    camera: state.camera,
-	    selected: state.selected,
-	    zoom: state.camera.zoom,
 	}))(_MapContent);
 
 
@@ -47898,18 +47950,68 @@
 
 	"use strict";
 	const React = __webpack_require__(1);
-	const Tile_1 = __webpack_require__(365);
-	const Hex_1 = __webpack_require__(373);
-	exports.UnitComponent = ({ unit, onContextMenu, onClick, selected, scale }) => {
-	    const { left, top } = Tile_1.getTilePosition(unit.tile, scale);
-	    return (React.createElement("g", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'unit' + (selected ? ' selected-unit' : ''), transform: 'translate(' + left + ', ' + top + ')'}, 
-	        React.createElement(Hex_1.Hex, {scale: scale, pattern: unit.name})
-	    ));
-	};
+	const constants_1 = __webpack_require__(362);
+	exports.Pattern = ({ name, image, imageScale = 1 }) => (React.createElement("pattern", {id: name, patternUnits: 'userSpaceOnUse', width: constants_1.TILE_WIDTH, height: constants_1.TILE_WIDTH}, 
+	    React.createElement("image", {xlinkHref: 'images/' + image, x: constants_1.TILE_WIDTH * ((1 - imageScale) / 2), y: constants_1.TILE_WIDTH * ((1 - imageScale) / 2), width: constants_1.TILE_WIDTH * imageScale, height: constants_1.TILE_WIDTH * imageScale})
+	));
+	exports.Patterns = () => (React.createElement("defs", null, 
+	    React.createElement(exports.Pattern, {name: 'water', image: 'water-texture.jpg'}), 
+	    React.createElement(exports.Pattern, {name: 'grass', image: 'grass-texture.jpg'}), 
+	    React.createElement(exports.Pattern, {name: 'forest', image: 'forest-texture.jpg'}), 
+	    React.createElement(exports.Pattern, {name: 'middle-age-city', image: 'middle-age-city.jpg'}), 
+	    React.createElement(exports.Pattern, {name: 'warrior', image: 'warrior.png', imageScale: 0.8}), 
+	    React.createElement(exports.Pattern, {name: 'settler', image: 'settler.png', imageScale: 0.8})));
 
 
 /***/ },
 /* 373 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	const react_redux_1 = __webpack_require__(186);
+	const actions_1 = __webpack_require__(360);
+	const UnitComponent_1 = __webpack_require__(374);
+	function _Units({ players, currentPlayerIndex, zoom, selected, dispatch }) {
+	    const currentPlayer = players[currentPlayerIndex];
+	    const units = players.map(player => player.units
+	        .filter(unit => currentPlayer.seenTileIds.indexOf(unit.tileId) > -1)
+	        .map(unit => {
+	        return (React.createElement(UnitComponent_1.UnitComponent, {unit: unit, scale: zoom, key: unit.id, selected: player.id === currentPlayer.id && selected.id === unit.id, onContextMenu: () => { }, onClick: () => {
+	            if (unit.ownerId === currentPlayer.id) {
+	                dispatch(actions_1.selectUnit(unit));
+	            }
+	        }}));
+	    }));
+	    return React.createElement("g", {className: 'units'}, units);
+	}
+	exports.Units = react_redux_1.connect((state) => ({
+	    currentPlayerIndex: state.currentPlayerIndex,
+	    players: state.players,
+	    selected: state.selection,
+	    zoom: state.camera.zoom,
+	}))(_Units);
+
+
+/***/ },
+/* 374 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	const tile_utils_1 = __webpack_require__(365);
+	const Hex_1 = __webpack_require__(375);
+	function UnitComponent({ unit, onContextMenu, onClick, selected, scale }) {
+	    const { left, top } = tile_utils_1.getTilePosition(unit.tileId, scale);
+	    return (React.createElement("g", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'unit' + (selected ? ' selected-unit' : ''), transform: 'translate(' + left + ', ' + top + ')'}, 
+	        React.createElement(Hex_1.Hex, {scale: scale, pattern: unit.name})
+	    ));
+	}
+	exports.UnitComponent = UnitComponent;
+
+
+/***/ },
+/* 375 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -47921,33 +48023,91 @@
 
 
 /***/ },
-/* 374 */
+/* 376 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
-	const Tile_1 = __webpack_require__(365);
-	const Hex_1 = __webpack_require__(373);
+	const react_redux_1 = __webpack_require__(186);
+	const actions_1 = __webpack_require__(360);
+	const TownComponent_1 = __webpack_require__(377);
+	function _Towns({ players, currentPlayerIndex, zoom, selected, dispatch }) {
+	    const currentPlayer = players[currentPlayerIndex];
+	    const towns = players.map((player, playerIndex) => player.towns
+	        .filter(town => currentPlayer.seenTileIds.indexOf(town.tile.id) > -1)
+	        .map(town => {
+	        return (React.createElement(TownComponent_1.TownComponent, {town: town, scale: zoom, key: town.id, selected: player.id === currentPlayer.id && selected.id === town.id, onContextMenu: () => { }, onClick: () => {
+	            if (town.ownerId === currentPlayer.id) {
+	                dispatch(actions_1.selectTown(town));
+	            }
+	        }}));
+	    }));
+	    return React.createElement("g", {className: 'towns'}, towns);
+	}
+	exports._Towns = _Towns;
+	exports.Towns = react_redux_1.connect((state) => ({
+	    currentPlayerIndex: state.currentPlayerIndex,
+	    players: state.players,
+	    selected: state.selection,
+	    zoom: state.camera.zoom,
+	}))(_Towns);
+
+
+/***/ },
+/* 377 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	const tile_utils_1 = __webpack_require__(365);
+	const Hex_1 = __webpack_require__(375);
+	const constants_1 = __webpack_require__(362);
 	function TownComponent({ town, onContextMenu, onClick, selected, scale }) {
-	    const { left, top } = Tile_1.getTilePosition(town.tile, scale);
-	    return (React.createElement("g", {style: { overflow: 'visible' }, onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'town' + (selected ? ' selected-Town' : ''), transform: 'translate(' + left + ', ' + top + ')'}, 
+	    const { left, top } = tile_utils_1.getTilePosition(town.tile.id, scale);
+	    return (React.createElement("g", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'town' + (selected ? ' selected' : ''), transform: 'translate(' + left + ', ' + top + ')'}, 
 	        React.createElement(Hex_1.Hex, {scale: scale, pattern: 'middle-age-city'}), 
-	        React.createElement("text", {fontSize: 20, x: scale / 2, textAnchor: 'middle', fill: 'white'}, town.name)));
+	        React.createElement("text", {fontSize: 40 * scale, x: constants_1.TILE_WIDTH * scale / 2, textAnchor: 'middle', fill: 'white'}, town.name)));
 	}
 	exports.TownComponent = TownComponent;
 	;
 
 
 /***/ },
-/* 375 */
+/* 378 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
-	const Tile_1 = __webpack_require__(365);
-	const Hex_1 = __webpack_require__(373);
+	const react_redux_1 = __webpack_require__(186);
+	const actions_1 = __webpack_require__(360);
+	const TileComponent_1 = __webpack_require__(379);
+	const tile_utils_1 = __webpack_require__(365);
+	function _Tiles({ players, currentPlayerIndex, camera, tiles, dispatch }) {
+	    const currentPlayer = players[currentPlayerIndex];
+	    const visibleTiles = currentPlayer.seenTileIds
+	        .map(id => tiles[id])
+	        .filter(tile => tile_utils_1.isTileVisible(tile, camera)).map(tile => React.createElement(TileComponent_1.TileComponent, {tile: tile, key: tile.id, scale: camera.zoom, onContextMenu: () => dispatch(actions_1.maybeMoveCurrentUnit(tile))}));
+	    return React.createElement("g", {className: 'tiles'}, visibleTiles);
+	}
+	exports._Tiles = _Tiles;
+	exports.Tiles = react_redux_1.connect((state) => ({
+	    currentPlayerIndex: state.currentPlayerIndex,
+	    players: state.players,
+	    camera: state.camera,
+	    tiles: state.tiles,
+	}))(_Tiles);
+
+
+/***/ },
+/* 379 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	const tile_utils_1 = __webpack_require__(365);
+	const Hex_1 = __webpack_require__(375);
 	function TileComponent({ tile, onContextMenu, scale }) {
-	    const { left, top } = Tile_1.getTilePosition(tile, scale);
+	    const { left, top } = tile_utils_1.getTilePosition(tile.id, scale);
 	    return (React.createElement("g", {onContextMenu: () => onContextMenu(), className: 'tile', transform: 'translate(' + left + ', ' + top + ')'}, 
 	        React.createElement(Hex_1.Hex, {scale: scale, pattern: tile.type})
 	    ));
@@ -47957,7 +48117,40 @@
 
 
 /***/ },
-/* 376 */
+/* 380 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	const react_redux_1 = __webpack_require__(186);
+	const tile_utils_1 = __webpack_require__(365);
+	const constants_1 = __webpack_require__(362);
+	function _SelectedUnitMovement({ selection, players, currentPlayerIndex, camera, tiles }) {
+	    if (selection.type !== 'unit')
+	        return null;
+	    const activePlayer = players[currentPlayerIndex];
+	    const activeUnit = activePlayer.units.filter(unit => unit.id === selection.id)[0];
+	    const seenTiles = activePlayer.seenTileIds.map(id => tiles[id]);
+	    const availableTiles = tile_utils_1.getAvailableTilesForUnit(activeUnit, seenTiles)
+	        .filter(tile => tile_utils_1.isTileVisible(tile, camera));
+	    return (React.createElement("g", null, availableTiles.map(tile => {
+	        const position = tile_utils_1.getTilePosition(tile.id, camera.zoom);
+	        return (React.createElement("g", {transform: 'translate(' + position.left + ', ' + position.top + ')', key: tile.id}, 
+	            React.createElement("circle", {className: 'move-marker', cx: constants_1.TILE_WIDTH * camera.zoom / 2, cy: constants_1.TILE_WIDTH * camera.zoom / 2, r: 30 * camera.zoom, stroke: 'green', strokeWidth: '4', fill: 'yellow', opacity: 0.6})
+	        ));
+	    })));
+	}
+	exports.SelectedUnitMovement = react_redux_1.connect((state) => ({
+	    selection: state.selection,
+	    players: state.players,
+	    currentPlayerIndex: state.currentPlayerIndex,
+	    camera: state.camera,
+	    tiles: state.tiles,
+	}))(_SelectedUnitMovement);
+
+
+/***/ },
+/* 381 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -47995,40 +48188,16 @@
 	    }
 	}
 	exports.UnitMenu = react_redux_1.connect((state) => ({
-	    selectedUnit: state.selected.type === 'unit' && state.players[state.currentPlayerIndex].units
-	        .filter(unit => unit.id === state.selected.id)[0],
+	    selectedUnit: state.selection.type === 'unit' && state.players[state.currentPlayerIndex].units
+	        .filter(unit => unit.id === state.selection.id)[0],
 	}))(_UnitMenu);
 
 
 /***/ },
-/* 377 */
+/* 382 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
-
-/***/ },
-/* 378 */,
-/* 379 */,
-/* 380 */,
-/* 381 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	const React = __webpack_require__(1);
-	const react_redux_1 = __webpack_require__(186);
-	const constants_1 = __webpack_require__(362);
-	exports.Pattern = ({ scale, name, image, imageScale = 1 }) => (React.createElement("pattern", {id: name, patternUnits: 'userSpaceOnUse', width: constants_1.TILE_WIDTH, height: constants_1.TILE_WIDTH}, 
-	    React.createElement("image", {xlinkHref: 'images/' + image, x: constants_1.TILE_WIDTH * ((1 - imageScale) / 2), y: constants_1.TILE_WIDTH * ((1 - imageScale) / 2), width: constants_1.TILE_WIDTH * imageScale, height: constants_1.TILE_WIDTH * imageScale})
-	));
-	exports._Patterns = ({ scale }) => (React.createElement("defs", null, 
-	    React.createElement(exports.Pattern, {scale: scale, name: 'water', image: 'water-texture.jpg'}), 
-	    React.createElement(exports.Pattern, {scale: scale, name: 'grass', image: 'grass-texture.jpg'}), 
-	    React.createElement(exports.Pattern, {scale: scale, name: 'forest', image: 'forest-texture.jpg'}), 
-	    React.createElement(exports.Pattern, {scale: scale, name: 'middle-age-city', image: 'middle-age-city.jpg'}), 
-	    React.createElement(exports.Pattern, {scale: scale, name: 'warrior', image: 'warrior.png', imageScale: 0.8}), 
-	    React.createElement(exports.Pattern, {scale: scale, name: 'settler', image: 'settler.png', imageScale: 0.8})));
-	exports.Patterns = react_redux_1.connect((state) => ({ scale: state.camera.zoom }))(exports._Patterns);
-
 
 /***/ }
 /******/ ]);

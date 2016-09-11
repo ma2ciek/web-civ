@@ -46,7 +46,7 @@ class _AnimatedMap extends React.Component<AppProps, {}> {
 
         try {
             map.addEventListener('wheel', (e) => {
-                const delta = e.wheelDelta / 120 || e.deltaY / -53;
+                const delta = (e as any).wheelDelta / 120 || e.deltaY / -53;
                 if (delta) {
                     this.props.dispatch(zoomMap(delta));
                 }

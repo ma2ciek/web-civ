@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { getTilePosition } from '../Tile';
+import { getTilePosition } from '../tile-utils';
 import { Town } from '../AppState';
 import { Hex } from './Hex';
+import { TILE_WIDTH } from '../constants';
 
 interface TownComponentProps {
     scale: number;
@@ -12,17 +13,18 @@ interface TownComponentProps {
 }
 
 export function TownComponent({ town, onContextMenu, onClick, selected, scale }: TownComponentProps) {
-    const { left, top } = getTilePosition(town.tile, scale);
+    const { left, top } = getTilePosition(town.tile.id, scale);
 
     return (
-        <g style={{ overflow: 'visible' }} onContextMenu={() => onContextMenu()} onClick={() => onClick()}
-            className={'town' + (selected ? ' selected-Town' : '')}
+        <g onContextMenu={() => onContextMenu() }
+            onClick={() => onClick() }
+            className={'town' + (selected ? ' selected' : '') }
             transform={'translate(' + left + ', ' + top + ')'}>
 
             <Hex scale={scale} pattern='middle-age-city' />
 
-            <text fontSize={20}
-                x={scale / 2}
+            <text fontSize={40 * scale}
+                x={TILE_WIDTH * scale / 2}
                 textAnchor='middle'
                 fill='white'>
                 {town.name}

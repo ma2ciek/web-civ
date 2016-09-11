@@ -1,5 +1,5 @@
 import { createAction } from 'redux-actions';
-import { Unit, Position, Town } from './AppState';
+import { Unit, Position, Town, Tile } from './AppState';
 
 export const GENERATE_MAP = 'GENERATE_MAP';
 export const GENERATE_PLAYERS = 'GENERATE_PLAYERS';
@@ -15,8 +15,7 @@ export const moveCamera = createAction<Position>(
 );
 
 export const nextTurn = createAction(NEXT_TURN);
-export const maybeMoveCurrentUnit = createAction(MAYBE_MOVE_BY, tile => ({ tile }));
-
+export const maybeMoveCurrentUnit = createAction(MAYBE_MOVE_BY, (tile: Tile) => ({ tileId: tile.id }));
 
 export const CREATE_CITY = 'CREATE_CITY';
 export const createCity = createAction(CREATE_CITY);

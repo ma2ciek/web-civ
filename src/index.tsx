@@ -15,3 +15,5 @@ ReactDOM.render(
     </Provider>,
     document.getElementById('root')
 );
+
+(window as any).getState = store.getState;

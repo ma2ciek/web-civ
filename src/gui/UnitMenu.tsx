@@ -58,8 +58,8 @@ class _UnitMenu extends React.Component<UnitMenuProps, {}> {
 
 export const UnitMenu = connect(
     (state: AppState) => ({
-        selectedUnit: state.selected.type === 'unit' && state.players[state.currentPlayerIndex].units
-            .filter(unit => unit.id === state.selected.id)[0],
+        selectedUnit: state.selection.type === 'unit' && state.players[state.currentPlayerIndex].units
+            .filter(unit => unit.id === state.selection.id)[0],
     })
 )(_UnitMenu);
 

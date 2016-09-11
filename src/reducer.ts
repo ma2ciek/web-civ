@@ -1,4 +1,4 @@
-import { AppState, Player, Unit, Town, Selected, Position } from './AppState';
+import { AppState, Player, Unit, Town, Selection, Position } from './AppState';
 import { handleActions } from 'redux-actions';
 import {
     GENERATE_MAP,
@@ -13,10 +13,12 @@ import {
 } from './actions';
 import { generateTiles } from './generators/generateTiles';
 import { generatePlayers } from './generators/generatePlayers';
-import { getTilePosition, getSurroundingTiles } from './Tile';
+import { getTilePosition, getSurroundingTiles, getAvailableMoves } from './tile-utils';
 import { uniq } from 'lodash';
 
-const assign = Object.assign;
+function join<X, Y>(x: X, y: Y) {
+    return Object.assign({}, x, y);
+}
 
 const initialState: AppState = {
     tiles: [],
@@ -26,43 +28,43 @@ const initialState: AppState = {
     camera: {
         left: 0,
         top: 0,
-        zoom: 1,
+        zoom: 0.3,
     },
-    selected: {
+    selection: {
         type: 'none',
         id: 0,
     },
 };
 
-
 export default handleActions<AppState, any>({
-    [GENERATE_MAP]: state => assign({}, state, {
+    [GENERATE_MAP]: state => join(state, {
         tiles: generateTiles(),
     }),
 
     [GENERATE_PLAYERS]: state => {
-        const players = generatePlayers({ tiles: state.tiles })
-            .map(p => assign({}, p, {
-                seenTiles: uniq(getSurroundingTiles(state.tiles, p.units.map(u => u.tile))),
+        const players = generatePlayers({ allTiles: state.tiles })
+            .map(p => join(p, {
+                seenTileIds: uniq(getSurroundingTiles({
+                    allTiles: state.tiles,
+                    tiles: p.units.map(u => state.tiles[u.tileId]),
+                })).map(t => t.id),
             }));
 
-        const currentPlayer = players[0];
-        const selectedUnit = currentPlayer.units[0];
-        const firstUnitTile = getTilePosition(selectedUnit.tile, state.camera.zoom);
+        const selectedUnit = players[0].units[0];
+        const firstUnitTile = getTilePosition(selectedUnit.tileId, state.camera.zoom);
 
-        return assign({}, state, {
-            selected: {
+        return join(state, {
+            selection: {
                 type: 'unit',
                 id: selectedUnit.id,
             },
             players,
-            currentPlayer,
-            camera: assign({}, state.camera, firstUnitTile),
+            camera: join(state.camera, firstUnitTile),
         });
     },
 
-    [MOVE_CAMERA]: (state, action) => assign({}, state, {
-        camera: assign({}, state.camera, {
+    [MOVE_CAMERA]: (state, action) => join(state, {
+        camera: join(state.camera, {
             left: state.camera.left + action.payload.left,
             top: state.camera.top + action.payload.top,
         }),
@@ -72,19 +74,25 @@ export default handleActions<AppState, any>({
         const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
         const nextPlayer = state.players[nextPlayerIndex];
 
-        const {selected, tilePosition } = getSelected(nextPlayer, state.camera.zoom);
+        const {selection, tilePosition } = getSelected(nextPlayer, state.camera.zoom);
 
-        return assign({}, state, {
-            selected: selected,
+        return join(state, {
+            selection: selection,
             currentPlayerIndex: nextPlayerIndex,
             turn: state.turn + (nextPlayerIndex === 0 ? 1 : 0),
-            camera: tilePosition ? assign({}, state.camera, tilePosition) : state.camera,
+            camera: tilePosition ? join(state.camera, tilePosition) : state.camera,
+
+            players: state.players.map(p => join(p, {
+                units: p.units.map(unit => join(unit, {
+                    movementLeft: unit.movement,
+                })),
+            })),
         });
     },
 
     [SELECT_UNIT]: (state, action) => {
-        return assign({}, state, {
-            selected: {
+        return join(state, {
+            selection: {
                 type: 'unit',
                 id: action.payload.id,
             },
@@ -92,8 +100,8 @@ export default handleActions<AppState, any>({
     },
 
     [SELECT_TOWN]: (state, action) => {
-        return assign({}, state, {
-            selected: {
+        return join(state, {
+            selection: {
                 type: 'town',
                 id: action.payload.id,
             },
@@ -101,33 +109,53 @@ export default handleActions<AppState, any>({
     },
 
     [MAYBE_MOVE_BY]: (state, action) => {
-        // TODO - check if unit can move
+        if (state.selection.type !== 'unit')
+            return state;
+
+        let currentPlayer = state.players[state.currentPlayerIndex];
+
+        const activeUnit = getActiveUnit(state);
+
+        const movementAvailableMap = getAvailableMoves(
+            state.tiles[activeUnit.tileId],
+            currentPlayer.seenTileIds.map(id => state.tiles[id]),
+            activeUnit.movementLeft
+        );
+
+        if (movementAvailableMap.length === 0)
+            return state;
+
+        const result = movementAvailableMap.filter(map => map.tile === state.tiles[action.payload.tileId]);
+
+        if (result.length === 0)
+            return state;
 
         state = updateSelectedUnit(state, unit => ({
-            tile: action.payload.tile,
+            tileId: action.payload.tileId,
+            movementLeft: result[0].movementLeft,
         }));
 
-        const currentPlayer = state.players[state.currentPlayerIndex];
+        currentPlayer = state.players[state.currentPlayerIndex];
 
-        return updateCurrentPlayer(state, p => assign({}, state, {
-            seenTiles: uniq([
-                ...currentPlayer.seenTiles,
-                ...getSurroundingTiles(
-                    state.tiles,
-                    currentPlayer.units.map(u => u.tile)
-                ),
+        return updateCurrentPlayer(state, p => join(state, {
+            seenTileIds: uniq([
+                ...currentPlayer.seenTileIds,
+                ...getSurroundingTiles({
+                    allTiles: state.tiles,
+                    tiles: currentPlayer.units.map(u => state.tiles[u.tileId]),
+                }).map(t => t.id),
             ]),
         }));
     },
 
     [CREATE_CITY]: (state, action) => {
-        const { tile } = state.players[state.currentPlayerIndex].units
-            .filter(unit => unit.id === state.selected.id)[0];
+        const { tileId } = state.players[state.currentPlayerIndex].units
+            .filter(unit => unit.id === state.selection.id)[0];
 
         const playerId = state.players[state.currentPlayerIndex].id;
 
         const town: Town = {
-            tile: assign({}, tile, { ownerId: playerId }),
+            tile: join(state.tiles[tileId], { ownerId: playerId }),
             ownerId: playerId,
             id: Math.random(),
             name: 'Unnamed town',
@@ -135,9 +163,9 @@ export default handleActions<AppState, any>({
         };
 
         state = updateCurrentPlayer(state, p => ({
-            units: p.units.filter(u => u.id !== state.selected.id),
+            units: p.units.filter(u => u.id !== state.selection.id),
             towns: [...p.towns, {
-                tile: assign({}, tile, { ownerId: p.id }),
+                tile: join(state.tiles[tileId], { ownerId: p.id }),
                 ownerId: p.id,
                 id: Math.random(),
                 name: 'Unnamed town',
@@ -145,8 +173,8 @@ export default handleActions<AppState, any>({
             }],
         }));
 
-        return assign({}, state, {
-            selected: assign({}, state.selected, {
+        return join(state, {
+            selection: join(state.selection, {
                 type: 'town',
                 id: town.id,
             }),
@@ -156,9 +184,10 @@ export default handleActions<AppState, any>({
     [ZOOM_MAP]: (state, action) => {
 
         const change = (1 + action.payload * 0.03);
+        // TODO - min / max zoom
 
-        return assign({}, state, {
-            camera: assign({}, state.camera, {
+        return join(state, {
+            camera: join(state.camera, {
                 zoom: state.camera.zoom * change,
                 left: state.camera.left * change,
                 top: state.camera.top * change,
@@ -170,11 +199,11 @@ export default handleActions<AppState, any>({
 }, initialState);
 
 function updateCurrentPlayer(state: AppState, fn: (p: Player) => {}) {
-    return assign({}, state, {
+    return join(state, {
         players: state.players
             .map((p, id) =>
                 id === state.currentPlayerIndex ?
-                    assign({}, p, fn(p)) : p
+                    join(p, fn(p)) : p
             ),
     });
 }
@@ -182,14 +211,14 @@ function updateCurrentPlayer(state: AppState, fn: (p: Player) => {}) {
 function updateSelectedUnit(state: AppState, fn: (unit: Unit) => {}) {
     return updateCurrentPlayer(state, p => ({
         units: p.units.map(unit =>
-            unit.id === state.selected.id && state.selected.type === 'unit' ?
-                assign({}, unit, fn(unit)) : unit
+            unit.id === state.selection.id && state.selection.type === 'unit' ?
+                join(unit, fn(unit)) : unit
         ),
     }));
 }
 
 interface Output {
-    selected: Selected;
+    selection: Selection;
     tilePosition: Position;
 }
 
@@ -197,17 +226,25 @@ function getSelected(player: Player, tileWidth: number): Output {
     const units = player.units;
     const towns = player.towns;
 
+    // TODO - index: 0 (?)
     return (units.length > 0) ? ({
-        selected: {
+        selection: {
             type: 'unit',
             id: units[0].id,
         },
-        tilePosition: getTilePosition(units[0].tile, tileWidth),
+        tilePosition: getTilePosition(units[0].tileId, tileWidth),
     }) : ({
-        selected: {
+        selection: {
             type: 'town',
             id: towns[0].id,
         },
-        tilePosition: getTilePosition(towns[0].tile, tileWidth),
+        tilePosition: getTilePosition(towns[0].tile.id, tileWidth),
     });
+}
+
+function getActiveUnit(state: AppState) {
+    let currentPlayer = state.players[state.currentPlayerIndex];
+
+    return currentPlayer.units
+        .filter(u => u.id === state.selection.id)[0];
 }
