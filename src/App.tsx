@@ -20,9 +20,11 @@ class App extends React.Component<AppProps, {}> {
     public render() {
         return (
             <div className='app'>
-                <AnimatedMap />
                 <TopMenu />
-                <UnitMenu />
+                <div style={{ display: 'flex' }}>
+                    <AnimatedMap />
+                    <UnitMenu />
+                </div>
             </div>
         );
     }

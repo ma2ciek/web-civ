@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { generatePlayers, generateMap, moveCamera } from '../actions';
+import { generatePlayers, generateMap, moveCamera, zoomMap } from '../actions';
 import { MapContent } from './MapContent';
 
 interface AppProps {
@@ -42,6 +42,18 @@ class _AnimatedMap extends React.Component<AppProps, {}> {
             e.preventDefault();
             e.stopPropagation();
         });
+
+
+        try {
+            map.addEventListener('wheel', (e) => {
+                const delta = e.wheelDelta / 120 || e.deltaY / -53;
+                if (delta) {
+                    this.props.dispatch(zoomMap(delta));
+                }
+            });
+        } catch (err) { console.warn('wheel is not supported'); }
+
+
 
         map.addEventListener('mousedown', (e: MouseEvent) => {
             if (e.which === 3) return;

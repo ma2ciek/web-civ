@@ -26,3 +26,6 @@ export const selectUnit = createAction(SELECT_UNIT, (unit: Unit) => unit);
 
 export const SELECT_TOWN = 'SELECT_TOWN';
 export const selectTown = createAction(SELECT_TOWN, (town: Town) => town);
+
+export const ZOOM_MAP = 'ZOOM_MAP';
+export const zoomMap = createAction(ZOOM_MAP, (delta: number) => delta);

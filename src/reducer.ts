@@ -1,4 +1,4 @@
-import { AppState, Player, Unit, Town, Selected, Position} from './AppState';
+import { AppState, Player, Unit, Town, Selected, Position } from './AppState';
 import { handleActions } from 'redux-actions';
 import {
     GENERATE_MAP,
@@ -9,6 +9,7 @@ import {
     CREATE_CITY,
     SELECT_UNIT,
     SELECT_TOWN,
+    ZOOM_MAP,
 } from './actions';
 import { generateTiles } from './generators/generateTiles';
 import { generatePlayers } from './generators/generatePlayers';
@@ -47,7 +48,7 @@ export default handleActions<AppState, any>({
 
         const currentPlayer = players[0];
         const selectedUnit = currentPlayer.units[0];
-        const firstUnitTile = getTilePosition(selectedUnit.tile);
+        const firstUnitTile = getTilePosition(selectedUnit.tile, state.camera.zoom);
 
         return assign({}, state, {
             selected: {
@@ -71,7 +72,7 @@ export default handleActions<AppState, any>({
         const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
         const nextPlayer = state.players[nextPlayerIndex];
 
-        const {selected, tilePosition } = getSelected(nextPlayer);
+        const {selected, tilePosition } = getSelected(nextPlayer, state.camera.zoom);
 
         return assign({}, state, {
             selected: selected,
@@ -90,7 +91,7 @@ export default handleActions<AppState, any>({
         });
     },
 
-     [SELECT_TOWN]: (state, action) => {
+    [SELECT_TOWN]: (state, action) => {
         return assign({}, state, {
             selected: {
                 type: 'town',
@@ -152,6 +153,20 @@ export default handleActions<AppState, any>({
         });
     },
 
+    [ZOOM_MAP]: (state, action) => {
+
+        const change = (1 + action.payload * 0.03);
+
+        return assign({}, state, {
+            camera: assign({}, state.camera, {
+                zoom: state.camera.zoom * change,
+                left: state.camera.left * change,
+                top: state.camera.top * change,
+            }),
+        });
+    },
+
+
 }, initialState);
 
 function updateCurrentPlayer(state: AppState, fn: (p: Player) => {}) {
@@ -178,7 +193,7 @@ interface Output {
     tilePosition: Position;
 }
 
-function getSelected(player: Player): Output {
+function getSelected(player: Player, tileWidth: number): Output {
     const units = player.units;
     const towns = player.towns;
 
@@ -187,12 +202,12 @@ function getSelected(player: Player): Output {
             type: 'unit',
             id: units[0].id,
         },
-        tilePosition: getTilePosition(units[0].tile)
+        tilePosition: getTilePosition(units[0].tile, tileWidth),
     }) : ({
         selected: {
             type: 'town',
             id: towns[0].id,
         },
-        tilePosition: getTilePosition(towns[0].tile)
+        tilePosition: getTilePosition(towns[0].tile, tileWidth),
     });
 }

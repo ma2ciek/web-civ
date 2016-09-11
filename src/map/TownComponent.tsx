@@ -1,37 +1,32 @@
 import * as React from 'react';
-import { getTilePosition, TILE_WIDTH } from '../Tile';
+import { getTilePosition } from '../Tile';
 import { Town } from '../AppState';
-import { assign } from 'lodash';
+import { Hex } from './Hex';
 
 interface TownComponentProps {
+    scale: number;
     town: Town;
-    color: string;
     selected: boolean;
     onClick(): void;
     onContextMenu(): void;
 }
 
+export function TownComponent({ town, onContextMenu, onClick, selected, scale }: TownComponentProps) {
+    const { left, top } = getTilePosition(town.tile, scale);
 
-const TownPattern = () => (
-    <defs>
-        <pattern id='middle-age-city' patternUnits='userSpaceOnUse' width='300' height='300'>
-            <image xlinkHref='images/middle-age-city.jpg' x='0' y='0' width='300' height='300' />
-        </pattern>
-    </defs>
-);
+    return (
+        <g style={{ overflow: 'visible' }} onContextMenu={() => onContextMenu()} onClick={() => onClick()}
+            className={'town' + (selected ? ' selected-Town' : '')}
+            transform={'translate(' + left + ', ' + top + ')'}>
 
-export const TownComponent = ({ town, onContextMenu, onClick, color, selected }: TownComponentProps) => (
-    <svg onContextMenu={() => onContextMenu()} onClick={() => onClick()}
-        className={'town' + (selected ? ' selected-Town' : '')}
-        viewBox='0 20 300 260'
-        width={TILE_WIDTH * 9 / 10}
-        style={assign({}, getTilePosition(town.tile), { padding: TILE_WIDTH * 1 / 20 })}>
+            <Hex scale={scale} pattern='middle-age-city' />
 
-        <TownPattern />
-
-        <polygon
-            points='300,150 225,280 75,280 0,150 75,20 225,20'
-            fill='url(#middle-age-city)'></polygon>
-        <text fontSize={40} alignmentBaseline='middle' x='50%' y='50%' textAnchor='middle' fill='black'>{town.name}</text>;
-    </svg >
-);
+            <text fontSize={20}
+                x={scale / 2}
+                textAnchor='middle'
+                fill='white'>
+                {town.name}
+            </text>
+        </g>
+    );
+};

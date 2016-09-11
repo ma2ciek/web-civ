@@ -2,12 +2,13 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import { AppState, Player, Camera, Selected } from '../AppState';
 import { maybeMoveCurrentUnit, selectUnit, selectTown } from '../actions';
-import { isTileVisible, TILE_WIDTH, TILE_HEIGHT } from '../Tile';
+import { isTileVisible } from '../Tile';
 import { FadeAnimate } from '../animations';
-import { PLAYER_COLORS } from '../constants';
+import { PLAYER_COLORS, TILE_WIDTH, TILE_HEIGH } from '../constants';
 import { UnitComponent } from './UnitComponent';
 import { TownComponent } from './TownComponent';
 import { TileComponent } from './TileComponent';
+import { Patterns } from './Patterns';
 
 interface MapContentProps {
     camera: Camera;
@@ -15,50 +16,55 @@ interface MapContentProps {
     players: Player[];
     currentPlayerIndex: number;
     selected: Selected;
+    zoom: number;
 }
 
-const _MapContent = ({ camera, players, currentPlayerIndex, dispatch, selected }: MapContentProps) => {
+const _MapContent = ({ camera, players, currentPlayerIndex, dispatch, selected, zoom }: MapContentProps) => {
     const currentPlayer = players[currentPlayerIndex];
+
+    const transform = (
+        'translate(' +
+        (-camera.left + window.innerWidth / 2 - TILE_WIDTH * zoom / 2) + ' ' +
+        (-camera.top + window.innerHeight / 2 - TILE_HEIGH * zoom / 2) + ')'
+    );
 
     if (!currentPlayer)
         return null;
 
     return (
-        <div className='map-content' style={{
-            marginLeft: -camera.left + window.innerWidth / 2 - TILE_WIDTH / 2,
-            marginTop: -camera.top + window.innerHeight / 2 - TILE_HEIGHT / 2,
-        }}>
-            <FadeAnimate>
+        <svg width='100%' height='100vh'>
+            <Patterns />
+
+            <g transform={transform}>
                 {currentPlayer && currentPlayer.seenTiles.filter(tile => isTileVisible(tile, camera)).map(tile =>
                     <TileComponent
                         tile={tile}
                         key={tile.id}
-                        onContextMenu={() => dispatch(maybeMoveCurrentUnit(tile))} />
-                )}
-            </FadeAnimate>
+                        scale={zoom}
+                        onContextMenu={() => dispatch(maybeMoveCurrentUnit(tile)) } />
+                ) }
 
-            {players.map(player =>
-                player.units
-                    .filter(unit => currentPlayer.seenTiles.map(t => t.id).indexOf(unit.tile.id) > -1)
-                    .map(unit => {
+                {players.map(player =>
+                    player.units
+                        .filter(unit => currentPlayer.seenTiles.map(t => t.id).indexOf(unit.tile.id) > -1)
+                        .map(unit => {
 
-                        return (
-                            <UnitComponent
-                                unit={unit}
-                                key={unit.id}
-                                selected={player.id === currentPlayer.id && selected.id === unit.id}
-                                color={PLAYER_COLORS[player.id]}
-                                onContextMenu={() => { } }
-                                onClick={() => {
-                                    if (unit.ownerId === currentPlayer.id) {
-                                        dispatch(selectUnit(unit));
-                                    }
-                                } } />
-                        );
-                    })
-            )}
+                            return (
+                                <UnitComponent
+                                    unit={unit}
+                                    scale={zoom}
+                                    key={unit.id}
+                                    selected={player.id === currentPlayer.id && selected.id === unit.id}
+                                    onContextMenu={() => { } }
+                                    onClick={() => {
+                                        if (unit.ownerId === currentPlayer.id) {
+                                            dispatch(selectUnit(unit));
+                                        }
+                                    } } />
+                            );
+                        })
+                ) }
 
-            <FadeAnimate>
                 {players.map((player, playerIndex) =>
                     player.towns
                         .filter(town => currentPlayer.seenTiles.map(t => t.id).indexOf(town.tile.id) > -1)
@@ -66,9 +72,9 @@ const _MapContent = ({ camera, players, currentPlayerIndex, dispatch, selected }
                             return (
                                 <TownComponent
                                     town={town}
+                                    scale={zoom}
                                     key={town.id}
                                     selected={player.id === currentPlayer.id && selected.id === town.id}
-                                    color={PLAYER_COLORS[playerIndex]}
                                     onContextMenu={() => { } }
                                     onClick={() => {
                                         if (town.ownerId === currentPlayer.id) {
@@ -77,9 +83,9 @@ const _MapContent = ({ camera, players, currentPlayerIndex, dispatch, selected }
                                     } } />
                             );
                         })
-                )}
-            </FadeAnimate>
-        </div>
+                ) }
+            </g>
+        </svg>
     );
 };
 
@@ -89,6 +95,7 @@ export const MapContent = connect(
         players: state.players,
         camera: state.camera,
         selected: state.selected,
+        zoom: state.camera.zoom,
     })
 )(_MapContent);
 

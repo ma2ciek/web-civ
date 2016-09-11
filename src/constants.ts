@@ -13,3 +13,6 @@ export const PLAYER_COLORS = [
 
 export const MAP_WIDTH = 20;
 export const MAP_HEIGHT = 20;
+
+export const TILE_WIDTH = 300;
+export const TILE_HEIGH = 300 * Math.sqrt(3) / 2;

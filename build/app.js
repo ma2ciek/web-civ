@@ -50,8 +50,8 @@
 	const react_redux_1 = __webpack_require__(186);
 	const redux_1 = __webpack_require__(193);
 	const reducer_1 = __webpack_require__(210);
-	const App_1 = __webpack_require__(366);
-	__webpack_require__(375);
+	const App_1 = __webpack_require__(367);
+	__webpack_require__(377);
 	const store = redux_1.createStore(reducer_1.default);
 	ReactDOM.render(React.createElement(react_redux_1.Provider, {store: store}, 
 	    React.createElement(App_1.default, null)
@@ -25425,9 +25425,9 @@
 	const redux_actions_1 = __webpack_require__(211);
 	const actions_1 = __webpack_require__(360);
 	const generateTiles_1 = __webpack_require__(361);
-	const generatePlayers_1 = __webpack_require__(363);
-	const Tile_1 = __webpack_require__(364);
-	const lodash_1 = __webpack_require__(365);
+	const generatePlayers_1 = __webpack_require__(364);
+	const Tile_1 = __webpack_require__(365);
+	const lodash_1 = __webpack_require__(366);
 	const assign = Object.assign;
 	const initialState = {
 	    tiles: [],
@@ -25456,7 +25456,7 @@
 	        }));
 	        const currentPlayer = players[0];
 	        const selectedUnit = currentPlayer.units[0];
-	        const firstUnitTile = Tile_1.getTilePosition(selectedUnit.tile);
+	        const firstUnitTile = Tile_1.getTilePosition(selectedUnit.tile, state.camera.zoom);
 	        return assign({}, state, {
 	            selected: {
 	                type: 'unit',
@@ -25476,7 +25476,7 @@
 	    [actions_1.NEXT_TURN]: state => {
 	        const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
 	        const nextPlayer = state.players[nextPlayerIndex];
-	        const { selected, tilePosition } = getSelected(nextPlayer);
+	        const { selected, tilePosition } = getSelected(nextPlayer, state.camera.zoom);
 	        return assign({}, state, {
 	            selected: selected,
 	            currentPlayerIndex: nextPlayerIndex,
@@ -25541,6 +25541,16 @@
 	            }),
 	        });
 	    },
+	    [actions_1.ZOOM_MAP]: (state, action) => {
+	        const change = (1 + action.payload * 0.03);
+	        return assign({}, state, {
+	            camera: assign({}, state.camera, {
+	                zoom: state.camera.zoom * change,
+	                left: state.camera.left * change,
+	                top: state.camera.top * change,
+	            }),
+	        });
+	    },
 	}, initialState);
 	function updateCurrentPlayer(state, fn) {
 	    return assign({}, state, {
@@ -25555,7 +25565,7 @@
 	            assign({}, unit, fn(unit)) : unit),
 	    }));
 	}
-	function getSelected(player) {
+	function getSelected(player, tileWidth) {
 	    const units = player.units;
 	    const towns = player.towns;
 	    return (units.length > 0) ? ({
@@ -25563,13 +25573,13 @@
 	            type: 'unit',
 	            id: units[0].id,
 	        },
-	        tilePosition: Tile_1.getTilePosition(units[0].tile)
+	        tilePosition: Tile_1.getTilePosition(units[0].tile, tileWidth),
 	    }) : ({
 	        selected: {
 	            type: 'town',
 	            id: towns[0].id,
 	        },
-	        tilePosition: Tile_1.getTilePosition(towns[0].tile)
+	        tilePosition: Tile_1.getTilePosition(towns[0].tile, tileWidth),
 	    });
 	}
 
@@ -30774,6 +30784,8 @@
 	exports.selectUnit = redux_actions_1.createAction(exports.SELECT_UNIT, (unit) => unit);
 	exports.SELECT_TOWN = 'SELECT_TOWN';
 	exports.selectTown = redux_actions_1.createAction(exports.SELECT_TOWN, (town) => town);
+	exports.ZOOM_MAP = 'ZOOM_MAP';
+	exports.zoomMap = redux_actions_1.createAction(exports.ZOOM_MAP, (delta) => delta);
 
 
 /***/ },
@@ -30782,7 +30794,7 @@
 
 	"use strict";
 	const constants_1 = __webpack_require__(362);
-	const utils_1 = __webpack_require__(379);
+	const utils_1 = __webpack_require__(363);
 	const tileTypeChances = [
 	    { type: 'grass', chance: 5 },
 	    { type: 'forest', chance: 2 },
@@ -30827,15 +30839,34 @@
 	];
 	exports.MAP_WIDTH = 20;
 	exports.MAP_HEIGHT = 20;
+	exports.TILE_WIDTH = 300;
+	exports.TILE_HEIGH = 300 * Math.sqrt(3) / 2;
 
 
 /***/ },
 /* 363 */
+/***/ function(module, exports) {
+
+	"use strict";
+	function getRandomType(chanceList) {
+	    const multiplier = 1 / chanceList.map(t => t.chance).reduce((sum, x) => sum + x, 0);
+	    let random = Math.random();
+	    for (const t of chanceList) {
+	        if (random < t.chance * multiplier)
+	            return t.type;
+	        random -= t.chance * multiplier;
+	    }
+	}
+	exports.getRandomType = getRandomType;
+
+
+/***/ },
+/* 364 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const constants_1 = __webpack_require__(362);
-	const Tile_1 = __webpack_require__(364);
+	const Tile_1 = __webpack_require__(365);
 	function generatePlayers({ tiles }) {
 	    const players = [];
 	    let nextId = 0;
@@ -30869,31 +30900,33 @@
 
 
 /***/ },
-/* 364 */
+/* 365 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const constants_1 = __webpack_require__(362);
-	exports.TILE_HEIGHT = 100 * Math.sqrt(3) / 2;
-	exports.TILE_WIDTH = 100;
-	function getTilePosition(tile) {
+	function getTilePosition(tile, zoom) {
+	    const tileWidth = zoom * constants_1.TILE_WIDTH;
+	    const tileHeight = zoom * constants_1.TILE_HEIGH;
 	    return tile.position.left % 2 === 0 ? ({
-	        left: tile.position.left * exports.TILE_WIDTH * 3 / 4,
-	        top: tile.position.top * exports.TILE_HEIGHT,
+	        left: tile.position.left * tileWidth * 3 / 4,
+	        top: tile.position.top * tileHeight,
 	    }) : ({
-	        left: tile.position.left * exports.TILE_WIDTH * 3 / 4,
-	        top: tile.position.top * exports.TILE_HEIGHT + exports.TILE_HEIGHT / 2,
+	        left: tile.position.left * tileWidth * 3 / 4,
+	        top: tile.position.top * tileHeight + tileHeight / 2,
 	    });
 	}
 	exports.getTilePosition = getTilePosition;
 	function isTileVisible(tile, camera) {
-	    const position = getTilePosition(tile);
-	    const left = position.left - camera.left + window.innerWidth / 2 - exports.TILE_WIDTH / 2;
-	    const top = position.top - camera.top + window.innerHeight / 2 - exports.TILE_HEIGHT / 2;
+	    const tileWidth = camera.zoom * constants_1.TILE_WIDTH;
+	    const tileHeight = camera.zoom * constants_1.TILE_HEIGH;
+	    const position = getTilePosition(tile, camera.zoom);
+	    const left = position.left - camera.left + window.innerWidth / 2 - tileWidth / 2;
+	    const top = position.top - camera.top + window.innerHeight / 2 - tileHeight / 2;
 	    return (left < window.innerWidth &&
 	        top < window.innerHeight &&
-	        left > -exports.TILE_WIDTH &&
-	        top > -exports.TILE_HEIGHT);
+	        left > -tileWidth &&
+	        top > -tileHeight);
 	}
 	exports.isTileVisible = isTileVisible;
 	function getSurroundingTiles(allTiles, tiles) {
@@ -30920,7 +30953,7 @@
 
 
 /***/ },
-/* 365 */
+/* 366 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global, module) {/**
@@ -47660,16 +47693,16 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(260)(module)))
 
 /***/ },
-/* 366 */
+/* 367 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
 	const actions_1 = __webpack_require__(360);
-	const TopMenu_1 = __webpack_require__(367);
-	const AnimatedMap_1 = __webpack_require__(369);
-	const UnitMenu_1 = __webpack_require__(374);
+	const TopMenu_1 = __webpack_require__(368);
+	const AnimatedMap_1 = __webpack_require__(370);
+	const UnitMenu_1 = __webpack_require__(376);
 	class App extends React.Component {
 	    constructor(props) {
 	        super();
@@ -47678,9 +47711,10 @@
 	    }
 	    render() {
 	        return (React.createElement("div", {className: 'app'}, 
-	            React.createElement(AnimatedMap_1.AnimatedMap, null), 
 	            React.createElement(TopMenu_1.TopMenu, null), 
-	            React.createElement(UnitMenu_1.UnitMenu, null)));
+	            React.createElement("div", {style: { display: 'flex' }}, 
+	                React.createElement(AnimatedMap_1.AnimatedMap, null), 
+	                React.createElement(UnitMenu_1.UnitMenu, null))));
 	    }
 	}
 	Object.defineProperty(exports, "__esModule", { value: true });
@@ -47688,14 +47722,14 @@
 
 
 /***/ },
-/* 367 */
+/* 368 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
 	const actions_1 = __webpack_require__(360);
-	const icons_1 = __webpack_require__(368);
+	const icons_1 = __webpack_require__(369);
 	const constants_1 = __webpack_require__(362);
 	const _TopMenu = ({ turn, players, currentPlayerIndex, dispatch }) => {
 	    const currentPlayer = players[currentPlayerIndex];
@@ -47716,7 +47750,7 @@
 
 
 /***/ },
-/* 368 */
+/* 369 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -47734,14 +47768,14 @@
 
 
 /***/ },
-/* 369 */
+/* 370 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
 	const actions_1 = __webpack_require__(360);
-	const MapContent_1 = __webpack_require__(370);
+	const MapContent_1 = __webpack_require__(371);
 	class _AnimatedMap extends React.Component {
 	    constructor(props) {
 	        super();
@@ -47766,6 +47800,17 @@
 	            e.preventDefault();
 	            e.stopPropagation();
 	        });
+	        try {
+	            map.addEventListener('wheel', (e) => {
+	                const delta = e.wheelDelta / 120 || e.deltaY / -53;
+	                if (delta) {
+	                    this.props.dispatch(actions_1.zoomMap(delta));
+	                }
+	            });
+	        }
+	        catch (err) {
+	            console.warn('wheel is not supported');
+	        }
 	        map.addEventListener('mousedown', (e) => {
 	            if (e.which === 3)
 	                return;
@@ -47795,67 +47840,56 @@
 
 
 /***/ },
-/* 370 */
+/* 371 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
 	const actions_1 = __webpack_require__(360);
-	const Tile_1 = __webpack_require__(364);
-	const animations_1 = __webpack_require__(371);
+	const Tile_1 = __webpack_require__(365);
 	const constants_1 = __webpack_require__(362);
 	const UnitComponent_1 = __webpack_require__(372);
-	const TownComponent_1 = __webpack_require__(373);
-	const TileComponent_1 = __webpack_require__(380);
-	const _MapContent = ({ camera, players, currentPlayerIndex, dispatch, selected }) => {
+	const TownComponent_1 = __webpack_require__(374);
+	const TileComponent_1 = __webpack_require__(375);
+	const Patterns_1 = __webpack_require__(381);
+	const _MapContent = ({ camera, players, currentPlayerIndex, dispatch, selected, zoom }) => {
 	    const currentPlayer = players[currentPlayerIndex];
+	    const transform = ('translate(' +
+	        (-camera.left + window.innerWidth / 2 - constants_1.TILE_WIDTH * zoom / 2) + ' ' +
+	        (-camera.top + window.innerHeight / 2 - constants_1.TILE_HEIGH * zoom / 2) + ')');
 	    if (!currentPlayer)
 	        return null;
-	    return (React.createElement("div", {className: 'map-content', style: {
-	        marginLeft: -camera.left + window.innerWidth / 2 - Tile_1.TILE_WIDTH / 2,
-	        marginTop: -camera.top + window.innerHeight / 2 - Tile_1.TILE_HEIGHT / 2,
-	    }}, 
-	        React.createElement(animations_1.FadeAnimate, null, currentPlayer && currentPlayer.seenTiles.filter(tile => Tile_1.isTileVisible(tile, camera)).map(tile => React.createElement(TileComponent_1.TileComponent, {tile: tile, key: tile.id, onContextMenu: () => dispatch(actions_1.maybeMoveCurrentUnit(tile))}))), 
-	        players.map(player => player.units
-	            .filter(unit => currentPlayer.seenTiles.map(t => t.id).indexOf(unit.tile.id) > -1)
-	            .map(unit => {
-	            return (React.createElement(UnitComponent_1.UnitComponent, {unit: unit, key: unit.id, selected: player.id === currentPlayer.id && selected.id === unit.id, color: constants_1.PLAYER_COLORS[player.id], onContextMenu: () => { }, onClick: () => {
-	                if (unit.ownerId === currentPlayer.id) {
-	                    dispatch(actions_1.selectUnit(unit));
-	                }
-	            }}));
-	        })), 
-	        React.createElement(animations_1.FadeAnimate, null, players.map((player, playerIndex) => player.towns
-	            .filter(town => currentPlayer.seenTiles.map(t => t.id).indexOf(town.tile.id) > -1)
-	            .map(town => {
-	            return (React.createElement(TownComponent_1.TownComponent, {town: town, key: town.id, selected: player.id === currentPlayer.id && selected.id === town.id, color: constants_1.PLAYER_COLORS[playerIndex], onContextMenu: () => { }, onClick: () => {
-	                if (town.ownerId === currentPlayer.id) {
-	                    dispatch(actions_1.selectTown(town));
-	                }
-	            }}));
-	        })))));
+	    return (React.createElement("svg", {width: '100%', height: '100vh'}, 
+	        React.createElement(Patterns_1.Patterns, null), 
+	        React.createElement("g", {transform: transform}, 
+	            currentPlayer && currentPlayer.seenTiles.filter(tile => Tile_1.isTileVisible(tile, camera)).map(tile => React.createElement(TileComponent_1.TileComponent, {tile: tile, key: tile.id, scale: zoom, onContextMenu: () => dispatch(actions_1.maybeMoveCurrentUnit(tile))})), 
+	            players.map(player => player.units
+	                .filter(unit => currentPlayer.seenTiles.map(t => t.id).indexOf(unit.tile.id) > -1)
+	                .map(unit => {
+	                return (React.createElement(UnitComponent_1.UnitComponent, {unit: unit, scale: zoom, key: unit.id, selected: player.id === currentPlayer.id && selected.id === unit.id, onContextMenu: () => { }, onClick: () => {
+	                    if (unit.ownerId === currentPlayer.id) {
+	                        dispatch(actions_1.selectUnit(unit));
+	                    }
+	                }}));
+	            })), 
+	            players.map((player, playerIndex) => player.towns
+	                .filter(town => currentPlayer.seenTiles.map(t => t.id).indexOf(town.tile.id) > -1)
+	                .map(town => {
+	                return (React.createElement(TownComponent_1.TownComponent, {town: town, scale: zoom, key: town.id, selected: player.id === currentPlayer.id && selected.id === town.id, onContextMenu: () => { }, onClick: () => {
+	                    if (town.ownerId === currentPlayer.id) {
+	                        dispatch(actions_1.selectTown(town));
+	                    }
+	                }}));
+	            })))));
 	};
 	exports.MapContent = react_redux_1.connect((state) => ({
 	    currentPlayerIndex: state.currentPlayerIndex,
 	    players: state.players,
 	    camera: state.camera,
 	    selected: state.selected,
+	    zoom: state.camera.zoom,
 	}))(_MapContent);
-
-
-/***/ },
-/* 371 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	const React = __webpack_require__(1);
-	class FadeAnimate extends React.Component {
-	    render() {
-	        return (React.createElement(React.addons.CSSTransitionGroup, {transitionName: 'fade', transitionEnterTimeout: 500, transitionLeaveTimeout: 300}, this.props.children));
-	    }
-	}
-	exports.FadeAnimate = FadeAnimate;
 
 
 /***/ },
@@ -47864,26 +47898,13 @@
 
 	"use strict";
 	const React = __webpack_require__(1);
-	const Tile_1 = __webpack_require__(364);
-	const KnightPattern = () => (React.createElement("defs", null, 
-	    React.createElement("pattern", {id: 'warrior', patternUnits: 'userSpaceOnUse', width: '300', height: '300'}, 
-	        React.createElement("image", {xlinkHref: 'images/warrior.png', x: '50', y: '50', width: '200', height: '200'})
-	    )
-	));
-	const SettlerPattern = () => (React.createElement("defs", null, 
-	    React.createElement("pattern", {id: 'settler', patternUnits: 'userSpaceOnUse', width: '300', height: '300'}, 
-	        React.createElement("image", {xlinkHref: 'images/settler.png', x: '50', y: '50', width: '200', height: '200'})
-	    )
-	));
-	const mapUnitNameToPattern = {
-	    warrior: KnightPattern,
-	    settler: SettlerPattern,
-	};
-	exports.UnitComponent = ({ unit, onContextMenu, onClick, color, selected }) => {
-	    const Pattern = mapUnitNameToPattern[unit.name];
-	    return (React.createElement("svg", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'unit' + (selected ? ' selected-unit' : ''), viewBox: '0 20 300 260', width: Tile_1.TILE_WIDTH, style: Tile_1.getTilePosition(unit.tile)}, 
-	        React.createElement(Pattern, null), 
-	        React.createElement("polygon", {points: '300,150 225,280 75,280 0,150 75,20 225,20', fill: 'url(#' + unit.name + ')'})));
+	const Tile_1 = __webpack_require__(365);
+	const Hex_1 = __webpack_require__(373);
+	exports.UnitComponent = ({ unit, onContextMenu, onClick, selected, scale }) => {
+	    const { left, top } = Tile_1.getTilePosition(unit.tile, scale);
+	    return (React.createElement("g", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'unit' + (selected ? ' selected-unit' : ''), transform: 'translate(' + left + ', ' + top + ')'}, 
+	        React.createElement(Hex_1.Hex, {scale: scale, pattern: unit.name})
+	    ));
 	};
 
 
@@ -47893,18 +47914,10 @@
 
 	"use strict";
 	const React = __webpack_require__(1);
-	const Tile_1 = __webpack_require__(364);
-	const lodash_1 = __webpack_require__(365);
-	const TownPattern = () => (React.createElement("defs", null, 
-	    React.createElement("pattern", {id: 'middle-age-city', patternUnits: 'userSpaceOnUse', width: '300', height: '300'}, 
-	        React.createElement("image", {xlinkHref: 'images/middle-age-city.jpg', x: '0', y: '0', width: '300', height: '300'})
-	    )
-	));
-	exports.TownComponent = ({ town, onContextMenu, onClick, color, selected }) => (React.createElement("svg", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'town' + (selected ? ' selected-Town' : ''), viewBox: '0 20 300 260', width: Tile_1.TILE_WIDTH * 9 / 10, style: lodash_1.assign({}, Tile_1.getTilePosition(town.tile), { padding: Tile_1.TILE_WIDTH * 1 / 20 })}, 
-	    React.createElement(TownPattern, null), 
-	    React.createElement("polygon", {points: '300,150 225,280 75,280 0,150 75,20 225,20', fill: 'url(#middle-age-city)'}), 
-	    React.createElement("text", {fontSize: 40, alignmentBaseline: 'middle', x: '50%', y: '50%', textAnchor: 'middle', fill: 'black'}, town.name), 
-	    ";"));
+	function Hex({ pattern, scale }) {
+	    return (React.createElement("polygon", {points: '300,150 225,280 75,280 0,150 75,20 225,20', transform: 'scale(' + scale + ')', fill: 'url(#' + pattern + ')'}));
+	}
+	exports.Hex = Hex;
 
 
 /***/ },
@@ -47913,8 +47926,44 @@
 
 	"use strict";
 	const React = __webpack_require__(1);
+	const Tile_1 = __webpack_require__(365);
+	const Hex_1 = __webpack_require__(373);
+	function TownComponent({ town, onContextMenu, onClick, selected, scale }) {
+	    const { left, top } = Tile_1.getTilePosition(town.tile, scale);
+	    return (React.createElement("g", {style: { overflow: 'visible' }, onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'town' + (selected ? ' selected-Town' : ''), transform: 'translate(' + left + ', ' + top + ')'}, 
+	        React.createElement(Hex_1.Hex, {scale: scale, pattern: 'middle-age-city'}), 
+	        React.createElement("text", {fontSize: 20, x: scale / 2, textAnchor: 'middle', fill: 'white'}, town.name)));
+	}
+	exports.TownComponent = TownComponent;
+	;
+
+
+/***/ },
+/* 375 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	const Tile_1 = __webpack_require__(365);
+	const Hex_1 = __webpack_require__(373);
+	function TileComponent({ tile, onContextMenu, scale }) {
+	    const { left, top } = Tile_1.getTilePosition(tile, scale);
+	    return (React.createElement("g", {onContextMenu: () => onContextMenu(), className: 'tile', transform: 'translate(' + left + ', ' + top + ')'}, 
+	        React.createElement(Hex_1.Hex, {scale: scale, pattern: tile.type})
+	    ));
+	}
+	exports.TileComponent = TileComponent;
+	;
+
+
+/***/ },
+/* 376 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
-	const icons_1 = __webpack_require__(368);
+	const icons_1 = __webpack_require__(369);
 	const actions_1 = __webpack_require__(360);
 	const SettlerOptions = ({ dispatch }) => {
 	    return (React.createElement("div", {className: 'settler-options'}, 
@@ -47952,64 +48001,33 @@
 
 
 /***/ },
-/* 375 */
+/* 377 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 376 */,
-/* 377 */,
 /* 378 */,
-/* 379 */
-/***/ function(module, exports) {
-
-	"use strict";
-	function getRandomType(chanceList) {
-	    const multiplier = 1 / chanceList.map(t => t.chance).reduce((sum, x) => sum + x, 0);
-	    let random = Math.random();
-	    for (const t of chanceList) {
-	        if (random < t.chance * multiplier)
-	            return t.type;
-	        random -= t.chance * multiplier;
-	    }
-	}
-	exports.getRandomType = getRandomType;
-
-
-/***/ },
-/* 380 */
+/* 379 */,
+/* 380 */,
+/* 381 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
-	const Tile_1 = __webpack_require__(364);
-	const WaterPattern = () => (React.createElement("defs", null, 
-	    React.createElement("pattern", {id: 'water', patternUnits: 'userSpaceOnUse', width: '300', height: '300'}, 
-	        React.createElement("image", {xlinkHref: 'images/water-texture.jpg', x: '0', y: '0', width: '300', height: '300'})
-	    )
+	const react_redux_1 = __webpack_require__(186);
+	const constants_1 = __webpack_require__(362);
+	exports.Pattern = ({ scale, name, image, imageScale = 1 }) => (React.createElement("pattern", {id: name, patternUnits: 'userSpaceOnUse', width: constants_1.TILE_WIDTH, height: constants_1.TILE_WIDTH}, 
+	    React.createElement("image", {xlinkHref: 'images/' + image, x: constants_1.TILE_WIDTH * ((1 - imageScale) / 2), y: constants_1.TILE_WIDTH * ((1 - imageScale) / 2), width: constants_1.TILE_WIDTH * imageScale, height: constants_1.TILE_WIDTH * imageScale})
 	));
-	const GrassPattern = () => (React.createElement("defs", null, 
-	    React.createElement("pattern", {id: 'grass', patternUnits: 'userSpaceOnUse', width: '300', height: '300'}, 
-	        React.createElement("image", {xlinkHref: 'images/grass-texture.jpg', x: '0', y: '0', width: '300', height: '300'})
-	    )
-	));
-	const ForestPattern = () => (React.createElement("defs", null, 
-	    React.createElement("pattern", {id: 'forest', patternUnits: 'userSpaceOnUse', width: '300', height: '300'}, 
-	        React.createElement("image", {xlinkHref: 'images/forest-texture.jpg', x: '0', y: '0', width: '300', height: '300'})
-	    )
-	));
-	const mapTypeToPattern = {
-	    water: WaterPattern,
-	    forest: ForestPattern,
-	    grass: GrassPattern,
-	};
-	exports.TileComponent = ({ tile, onContextMenu }) => {
-	    const Pattern = mapTypeToPattern[tile.type];
-	    return (React.createElement("svg", {onContextMenu: () => onContextMenu(), className: 'tile', viewBox: '0 20 300 260', width: Tile_1.TILE_WIDTH, style: Tile_1.getTilePosition(tile)}, 
-	        React.createElement(Pattern, null), 
-	        React.createElement("polygon", {points: '300,150 225,280 75,280 0,150 75,20 225,20', fill: 'url(#' + tile.type + ')'})));
-	};
+	exports._Patterns = ({ scale }) => (React.createElement("defs", null, 
+	    React.createElement(exports.Pattern, {scale: scale, name: 'water', image: 'water-texture.jpg'}), 
+	    React.createElement(exports.Pattern, {scale: scale, name: 'grass', image: 'grass-texture.jpg'}), 
+	    React.createElement(exports.Pattern, {scale: scale, name: 'forest', image: 'forest-texture.jpg'}), 
+	    React.createElement(exports.Pattern, {scale: scale, name: 'middle-age-city', image: 'middle-age-city.jpg'}), 
+	    React.createElement(exports.Pattern, {scale: scale, name: 'warrior', image: 'warrior.png', imageScale: 0.8}), 
+	    React.createElement(exports.Pattern, {scale: scale, name: 'settler', image: 'settler.png', imageScale: 0.8})));
+	exports.Patterns = react_redux_1.connect((state) => ({ scale: state.camera.zoom }))(exports._Patterns);
 
 
 /***/ }

@@ -1,21 +1,15 @@
 .map {
-    position: absolute;
     width: 100%;
     height: 100%;
     
-    .map-content {
-        position: relative;
-    }
-
-    svg.town {
-        position: absolute;
+    g.town {
         cursor: pointer;    
     }
 
-    svg.unit {
-        position: absolute;
+    g.unit {
+        overflow: visible;
+        cursor: pointer;        
         transition: all 0.5s ease;
-        cursor: pointer;
 
         &:hover polygon {
             stroke-width: 5px;
@@ -28,9 +22,7 @@
         }
     }
 
-    svg.tile {
-        position: absolute;
-
+    g.tile {
         polygon {
             stroke-width: 1px;
             stroke: #555;

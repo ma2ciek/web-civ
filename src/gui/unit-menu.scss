@@ -4,14 +4,9 @@ $icon-color: white;
 $icon-highlight-color: #e4820a; 
 
 .unit-side-menu {
-    z-index: 10;
-    position: absolute;
     padding: 10px 20px 20px;
     background: repeating-linear-gradient(-45deg, $menu-second-color, $menu-second-color 10px, $menu-first-color 0, $menu-first-color 20px);
     border-left: 1px solid rgba(0, 50, 100, 0.8);
-    right: 0;
-    top: 0;
-    height: 100vh;
     box-sizing: border-box;
 
     h2 {
