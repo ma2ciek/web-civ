@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import { moveCamera, zoomMap } from '../actions';
 import { MapContent } from './MapContent';
 
+import './map.scss';
+
 interface AppProps {
     dispatch: Function;
 }

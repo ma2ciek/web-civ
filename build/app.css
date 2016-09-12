@@ -1,32 +1,3 @@
-body {
-  margin: 0;
-  font-family: Verdana, Lato;
-  box-sizing: border-box; }
-
-.app {
-  width: 100%;
-  height: 100vh;
-  overflow: hidden;
-  position: relative; }
-
-.red {
-  color: red; }
-
-svg {
-  height: 100%; }
-
-.fade-enter {
-  opacity: 0.01; }
-  .fade-enter.fade-enter-active {
-    opacity: 1;
-    transition: opacity 500ms ease-in; }
-
-.fade-leave {
-  opacity: 1; }
-  .fade-leave.fade-leave-active {
-    opacity: 0.01;
-    transition: opacity 300ms ease-in; }
-
 .top-menu {
   width: 100%;
   color: white;
@@ -42,7 +13,30 @@ svg {
     fill: white;
     height: 20px;
     padding: 5px; }
-
+.map {
+  width: 100%;
+  height: 100%; }
+  .map g.town {
+    cursor: pointer;
+    overflow: visible; }
+    .map g.town.selected polygon {
+      stroke-width: 10px;
+      stroke: gold; }
+  .map g.unit {
+    overflow: visible;
+    cursor: pointer;
+    transition: all 0.5s ease; }
+    .map g.unit:hover polygon {
+      stroke-width: 5px;
+      stroke: #09f; }
+    .map g.unit.selected-unit polygon {
+      stroke-width: 10px;
+      stroke: gold; }
+  .map g.tile polygon {
+    stroke-width: 1px;
+    stroke: #555; }
+  .map circle.move-marker {
+    pointer-events: none; }
 .unit-side-menu {
   min-width: 180px;
   max-width: 180px;
@@ -75,7 +69,6 @@ svg {
       transition: all 0.15s ease-in-out; }
     .unit-side-menu .option :hover svg {
       background: #e4820a; }
-
 .bottom-menu {
   position: fixed;
   bottom: 0;
@@ -102,30 +95,33 @@ svg {
     .bottom-menu .next svg {
       width: 100%;
       fill: #fff; }
+body {
+  margin: 0;
+  font-family: Verdana, Lato;
+  box-sizing: border-box; }
 
-.map {
+.app {
   width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: relative; }
+
+.red {
+  color: red; }
+
+svg {
   height: 100%; }
-  .map g.town {
-    cursor: pointer;
-    overflow: visible; }
-    .map g.town.selected polygon {
-      stroke-width: 10px;
-      stroke: gold; }
-  .map g.unit {
-    overflow: visible;
-    cursor: pointer;
-    transition: all 0.5s ease; }
-    .map g.unit:hover polygon {
-      stroke-width: 5px;
-      stroke: #09f; }
-    .map g.unit.selected-unit polygon {
-      stroke-width: 10px;
-      stroke: gold; }
-  .map g.tile polygon {
-    stroke-width: 1px;
-    stroke: #555; }
-  .map circle.move-marker {
-    pointer-events: none; }
+
+.fade-enter {
+  opacity: 0.01; }
+  .fade-enter.fade-enter-active {
+    opacity: 1;
+    transition: opacity 500ms ease-in; }
+
+.fade-leave {
+  opacity: 1; }
+  .fade-leave.fade-leave-active {
+    opacity: 0.01;
+    transition: opacity 300ms ease-in; }
 
 /*# sourceMappingURL=app.css.map*/

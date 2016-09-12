@@ -20,6 +20,9 @@ export const maybeMoveCurrentUnit = createAction(MAYBE_MOVE_BY, (tile: Tile) => 
 export const CREATE_CITY = 'CREATE_CITY';
 export const createCity = createAction(CREATE_CITY);
 
+export const DESELECT = 'DESELECT';
+export const deselect = createAction(DESELECT);
+
 export const SELECT_UNIT = 'SELECT_UNIT';
 export const selectUnit = createAction(SELECT_UNIT, (unit: Unit) => unit);
 

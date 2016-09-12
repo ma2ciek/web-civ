@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import { AppState, Player } from '../AppState';
 import { PLAYER_COLORS, STORAGE_KEY } from '../constants';
 
+import './top-menu.scss';
+
 interface TopMenuProps {
     turn: number;
     currentPlayerIndex: number;

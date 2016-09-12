@@ -5,6 +5,8 @@ import { nextTurn, next } from '../actions';
 import { IconNext, IconReload } from '../icons';
 import { getNextSelection } from '../reducer';
 
+import './bottom-menu.scss';
+
 interface BottomMenuProps {
     dispatch: Function;
     nextSelection: boolean;

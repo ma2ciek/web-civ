@@ -1,3 +1,5 @@
+@import '../constants';
+
 .bottom-menu {
     position: fixed;
     bottom: 0;
@@ -15,7 +17,7 @@
         height: 80px;
         background-color: #fff;
         padding: 20px;
-        background: #465298;
+        background: $menu-first-color;
         border-radius: 50%;
         margin-bottom: 20px;
         box-sizing: border-box;

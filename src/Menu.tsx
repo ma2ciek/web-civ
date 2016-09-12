@@ -1,5 +1,6 @@
 import * as React from 'react';
 
+// TODO - initialization screen
 export class Menu extends React.Component<{}, {}> {
     private mapWidth = 20;
     private mapHeight = 20;
@@ -10,13 +11,16 @@ export class Menu extends React.Component<{}, {}> {
         return (
             <div className='menu'>
                 <div>
-                    <h2>Continue playing</h2>
-                </div>
-                <div>
                     <h2>Start new game</h2>
-                    <input value={this.mapWidth} type='number' onChange={e => this.mapWidth = +(e.target as HTMLInputElement).value} />
-                    <input value={this.mapHeight} type='number' onChange={e => this.mapHeight = +(e.target as HTMLInputElement).value} />
-                    <input value={this.players} type='number' onChange={e => this.players = +(e.target as HTMLInputElement).value} />
+                    <input type='number'
+                        value={this.mapWidth.toString()}
+                        onChange={e => this.mapWidth = +(e.target as HTMLInputElement).value} />
+                    <input type='number'
+                        value={this.mapHeight.toString()}
+                        onChange={e => this.mapHeight = +(e.target as HTMLInputElement).value} />
+                    <input type='number'
+                        value={this.players.toString()}
+                        onChange={e => this.players = +(e.target as HTMLInputElement).value} />
                 </div>
             </div>
         );

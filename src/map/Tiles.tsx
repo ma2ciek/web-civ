@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { AppState, Player, Selection, Camera, Tile } from '../AppState';
-import { maybeMoveCurrentUnit } from '../actions';
+import { maybeMoveCurrentUnit, deselect } from '../actions';
 import { TileComponent } from './TileComponent';
 import { isTileVisible } from '../tile-utils';
 
@@ -23,7 +23,8 @@ export function _Tiles({ players, currentPlayerIndex, camera, tiles, dispatch }:
                 tile={tile}
                 key={tile.id}
                 scale={camera.zoom}
-                onContextMenu={() => dispatch(maybeMoveCurrentUnit(tile)) } />
+                onContextMenu={() => dispatch(maybeMoveCurrentUnit(tile)) }
+                onClick={() => dispatch(deselect())} />
         );
 
     return <g className='tiles'>{ visibleTiles }</g>;

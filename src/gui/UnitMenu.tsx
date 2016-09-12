@@ -4,6 +4,8 @@ import { AppState, Unit } from '../AppState';
 import { IconHome } from '../icons';
 import { createCity } from '../actions';
 
+import './unit-menu.scss';
+
 interface UnitOptionsProps {
     dispatch: Function;
 }

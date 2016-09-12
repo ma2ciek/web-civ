@@ -11,6 +11,7 @@ import {
     SELECT_TOWN,
     ZOOM_MAP,
     NEXT,
+    DESELECT,
 } from './actions';
 import { generateTiles } from './generators/generateTiles';
 import { generatePlayers } from './generators/generatePlayers';
@@ -48,7 +49,7 @@ export default handleActions<AppState, any>({
                 seenTileIds: uniq(getSurroundingTiles({
                     allTiles: state.tiles,
                     tiles: p.units.map(u => state.tiles[u.tileId]),
-                })).map(t => t.id),
+                })).map(t => t.id).sort(),
             }));
 
         const selectedUnit = players[0].units[0];
@@ -91,23 +92,27 @@ export default handleActions<AppState, any>({
         });
     },
 
-    [SELECT_UNIT]: (state, action) => {
-        return join(state, {
-            selection: {
-                type: 'unit',
-                id: action.payload.id,
-            },
-        });
-    },
+    [DESELECT]: (state) => join(state, {
+        // TODO - disable when dragging
+        // selection: {
+        //     type: 'none',
+        //     id: -1,
+        // },
+    }),
 
-    [SELECT_TOWN]: (state, action) => {
-        return join(state, {
-            selection: {
-                type: 'town',
-                id: action.payload.id,
-            },
-        });
-    },
+    [SELECT_UNIT]: (state, action) => join(state, {
+        selection: {
+            type: 'unit',
+            id: action.payload.id,
+        },
+    }),
+
+    [SELECT_TOWN]: (state, action) => join(state, {
+        selection: {
+            type: 'town',
+            id: action.payload.id,
+        },
+    }),
 
     [NEXT]: (state) => {
         let nextSelection = getNextSelection(state);
@@ -143,13 +148,13 @@ export default handleActions<AppState, any>({
 
         currentPlayer = state.players[state.currentPlayerIndex];
 
-        return updateCurrentPlayer(state, p => join(state, {
+        return updateCurrentPlayer(state, p => ({
             seenTileIds: uniq([
                 ...currentPlayer.seenTileIds,
                 ...getSurroundingTiles({
                     allTiles: state.tiles,
                     tiles: currentPlayer.units.map(u => state.tiles[u.tileId]),
-                }).map(t => t.id),
+                }).map(t => t.id).sort(),
             ]),
         }));
     },
@@ -266,7 +271,7 @@ function getNextUnit(state: AppState): Unit {
 
 function getNextTown(state: AppState): Town {
     const currentPlayer = state.players[state.currentPlayerIndex];
-   // TODO - town actions 
-   // return currentPlayer.towns.filter(t => t.builded && t.id !== state.selection.id)[0];
-   return null;
+    // TODO - town actions 
+    // return currentPlayer.towns.filter(t => t.builded && t.id !== state.selection.id)[0];
+    return null;
 }

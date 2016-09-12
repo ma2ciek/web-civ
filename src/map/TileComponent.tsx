@@ -7,13 +7,17 @@ interface TileContentProps {
     tile: Tile;
     scale: number;
     onContextMenu(): void;
+    onClick(): void;
 }
 
-export function TileComponent({ tile, onContextMenu, scale }: TileContentProps) {
+export function TileComponent({ tile, onContextMenu, onClick, scale }: TileContentProps) {
     const { left, top } = getTilePosition(tile.id, scale);
 
     return (
-        <g onContextMenu={() => onContextMenu() } className='tile'
+        <g
+            onContextMenu={() => onContextMenu() }
+            onClick={() => onClick() }
+            className='tile'
             transform={'translate(' + left + ', ' + top + ')'}>
             <Hex scale={scale} pattern={tile.type} />
         </g>

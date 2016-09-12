@@ -53,7 +53,7 @@
 	const App_1 = __webpack_require__(367);
 	const actions_1 = __webpack_require__(360);
 	const constants_1 = __webpack_require__(362);
-	__webpack_require__(382);
+	__webpack_require__(393);
 	localforage.getItem(constants_1.STORAGE_KEY).then((data) => {
 	    console.log(data);
 	    const store = data ? redux_1.createStore(reducer_1.default, data) : redux_1.createStore(reducer_1.default);
@@ -25471,7 +25471,7 @@
 	            seenTileIds: lodash_1.uniq(tile_utils_1.getSurroundingTiles({
 	                allTiles: state.tiles,
 	                tiles: p.units.map(u => state.tiles[u.tileId]),
-	            })).map(t => t.id),
+	            })).map(t => t.id).sort(),
 	        }));
 	        const selectedUnit = players[0].units[0];
 	        const firstUnitTile = tile_utils_1.getTilePosition(selectedUnit.tileId, state.camera.zoom);
@@ -25506,22 +25506,19 @@
 	            })),
 	        });
 	    },
-	    [actions_1.SELECT_UNIT]: (state, action) => {
-	        return join(state, {
-	            selection: {
-	                type: 'unit',
-	                id: action.payload.id,
-	            },
-	        });
-	    },
-	    [actions_1.SELECT_TOWN]: (state, action) => {
-	        return join(state, {
-	            selection: {
-	                type: 'town',
-	                id: action.payload.id,
-	            },
-	        });
-	    },
+	    [actions_1.DESELECT]: (state) => join(state, {}),
+	    [actions_1.SELECT_UNIT]: (state, action) => join(state, {
+	        selection: {
+	            type: 'unit',
+	            id: action.payload.id,
+	        },
+	    }),
+	    [actions_1.SELECT_TOWN]: (state, action) => join(state, {
+	        selection: {
+	            type: 'town',
+	            id: action.payload.id,
+	        },
+	    }),
 	    [actions_1.NEXT]: (state) => {
 	        let nextSelection = getNextSelection(state);
 	        return join(state, { selection: nextSelection });
@@ -25542,13 +25539,13 @@
 	            movementLeft: result[0].movementLeft,
 	        }));
 	        currentPlayer = state.players[state.currentPlayerIndex];
-	        return updateCurrentPlayer(state, p => join(state, {
+	        return updateCurrentPlayer(state, p => ({
 	            seenTileIds: lodash_1.uniq([
 	                ...currentPlayer.seenTileIds,
 	                ...tile_utils_1.getSurroundingTiles({
 	                    allTiles: state.tiles,
 	                    tiles: currentPlayer.units.map(u => state.tiles[u.tileId]),
-	                }).map(t => t.id),
+	                }).map(t => t.id).sort(),
 	            ]),
 	        }));
 	    },
@@ -30839,6 +30836,8 @@
 	exports.maybeMoveCurrentUnit = redux_actions_1.createAction(exports.MAYBE_MOVE_BY, (tile) => ({ tileId: tile.id }));
 	exports.CREATE_CITY = 'CREATE_CITY';
 	exports.createCity = redux_actions_1.createAction(exports.CREATE_CITY);
+	exports.DESELECT = 'DESELECT';
+	exports.deselect = redux_actions_1.createAction(exports.DESELECT);
 	exports.SELECT_UNIT = 'SELECT_UNIT';
 	exports.selectUnit = redux_actions_1.createAction(exports.SELECT_UNIT, (unit) => unit);
 	exports.SELECT_TOWN = 'SELECT_TOWN';
@@ -47818,9 +47817,9 @@
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
 	const TopMenu_1 = __webpack_require__(368);
-	const AnimatedMap_1 = __webpack_require__(370);
-	const UnitMenu_1 = __webpack_require__(381);
-	const BottomMenu_1 = __webpack_require__(386);
+	const AnimatedMap_1 = __webpack_require__(373);
+	const UnitMenu_1 = __webpack_require__(386);
+	const BottomMenu_1 = __webpack_require__(390);
 	class App extends React.Component {
 	    render() {
 	        return (React.createElement("div", {className: 'app'}, 
@@ -47843,6 +47842,7 @@
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
 	const constants_1 = __webpack_require__(362);
+	__webpack_require__(369);
 	const _TopMenu = ({ turn, players, currentPlayerIndex }) => {
 	    const currentPlayer = players[currentPlayerIndex];
 	    if (!currentPlayer)
@@ -47865,36 +47865,23 @@
 
 /***/ },
 /* 369 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	"use strict";
-	const React = __webpack_require__(1);
-	exports.IconReload = () => (React.createElement("svg", {viewBox: '0 0 1000 1000'}, 
-	    React.createElement("g", null, 
-	        React.createElement("path", {d: 'M987.4,466.9l-54,95.1l-54.7,96.4h-0.1c-2.7,4.4-7.5,7.4-13.1,7.4c-5.6,0-10.6-3.1-13.3-7.7l0,0L797.8,562l-54.1-95.4c-1.5-2.4-2.4-5.3-2.4-8.3c0-8.7,6.9-15.7,15.5-15.7h70.8C800.8,284.2,665.2,163.8,502,163.8c-63.6,0-123,18.3-173.4,50c-6.8,4.9-15.1,7.9-24,7.9c-22.8,0-41.3-18.8-41.3-42c0-15.9,8.8-29.8,21.6-36.9C348,103,422.4,80,502.1,80C711,80,883.5,237.7,911.1,442.5h63.5c8.5,0,15.4,7,15.4,15.7C990,461.4,989,464.4,987.4,466.9z M243.2,491.3h-71.5c-0.1,2.9-0.1,5.7-0.1,8.7c0,185.7,147.9,336.2,330.4,336.2c74.4,0,143-25,198.3-67.3c0,0,0,0.1,0.1,0.1c7.4-7.1,17.3-11.4,28.2-11.4c22.8,0,41.3,18.8,41.3,42c0,12.4-5.3,23.7-13.8,31.4c0,0,0,0,0,0.1c-0.3,0.2-0.6,0.5-0.9,0.7c-1,0.8-2.1,1.6-3.1,2.4c-69.4,53.8-156,85.8-250,85.8c-228,0-412.8-188.1-412.8-420c0-2.9,0-5.8,0.1-8.8h-64c-8.5,0-15.4-7-15.4-15.7c0-3.1,0.9-6,2.4-8.4l54.2-95.4l54.5-96h0c2.7-4.6,7.6-7.7,13.2-7.7c5.5,0,10.4,2.9,13.1,7.4h0.1l54.7,96.3l54,95.2c1.6,2.5,2.5,5.5,2.5,8.7C258.7,484.3,251.8,491.3,243.2,491.3z'})
-	    )
-	));
-	exports.IconHome = () => (React.createElement("svg", {viewBox: '0 -256 1792 1792'}, 
-	    React.createElement("g", {transform: 'matrix(1,0,0,-1,68.338983,1285.4237)'}, 
-	        React.createElement("path", {d: 'M 1408,544 V 64 Q 1408,38 1389,19 1370,0 1344,0 H 960 V 384 H 704 V 0 H 320 q -26,0 -45,19 -19,19 -19,45 v 480 q 0,1 0.5,3 0.5,2 0.5,3 l 575,474 575,-474 q 1,-2 1,-6 z m 223,69 -62,-74 q -8,-9 -21,-11 h -3 q -13,0 -21,7 L 832,1112 140,535 q -12,-8 -24,-7 -13,2 -21,11 l -62,74 q -8,10 -7,23.5 1,13.5 11,21.5 l 719,599 q 32,26 76,26 44,0 76,-26 l 244,-204 v 195 q 0,14 9,23 9,9 23,9 h 192 q 14,0 23,-9 9,-9 9,-23 V 840 l 219,-182 q 10,-8 11,-21.5 1,-13.5 -7,-23.5 z'})
-	    )
-	));
-	exports.IconNext = () => (React.createElement("svg", {viewBox: "0 0 477.175 477.175"}, 
-	    React.createElement("g", null, 
-	        React.createElement("path", {d: "M360.731,229.075l-225.1-225.1c-5.3-5.3-13.8-5.3-19.1,0s-5.3,13.8,0,19.1l215.5,215.5l-215.5,215.5 c-5.3, 5.3-5.3, 13.8, 0, 19.1c2.6, 2.6, 6.1, 4, 9.5, 4c3.4, 0, 6.9-1.3, 9.5-4l225.1-225.1C365.931, 242.875, 365.931, 234.275, 360.731, 229.075z"})
-	    )
-	));
-
+	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 370 */
+/* 370 */,
+/* 371 */,
+/* 372 */,
+/* 373 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
 	const actions_1 = __webpack_require__(360);
-	const MapContent_1 = __webpack_require__(371);
+	const MapContent_1 = __webpack_require__(374);
+	__webpack_require__(384);
 	class _AnimatedMap extends React.Component {
 	    constructor() {
 	        super(...arguments);
@@ -47958,18 +47945,18 @@
 
 
 /***/ },
-/* 371 */
+/* 374 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
 	const constants_1 = __webpack_require__(362);
-	const Patterns_1 = __webpack_require__(372);
-	const Units_1 = __webpack_require__(373);
-	const Towns_1 = __webpack_require__(376);
-	const Tiles_1 = __webpack_require__(378);
-	const SelectedUnitMovement_1 = __webpack_require__(380);
+	const Patterns_1 = __webpack_require__(375);
+	const Units_1 = __webpack_require__(376);
+	const Towns_1 = __webpack_require__(379);
+	const Tiles_1 = __webpack_require__(381);
+	const SelectedUnitMovement_1 = __webpack_require__(383);
 	function _MapContent({ camera, players, currentPlayerIndex }) {
 	    const currentPlayer = players[currentPlayerIndex];
 	    const transform = ('translate(' +
@@ -47994,7 +47981,7 @@
 
 
 /***/ },
-/* 372 */
+/* 375 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -48013,14 +48000,14 @@
 
 
 /***/ },
-/* 373 */
+/* 376 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
 	const actions_1 = __webpack_require__(360);
-	const UnitComponent_1 = __webpack_require__(374);
+	const UnitComponent_1 = __webpack_require__(377);
 	function _Units({ players, currentPlayerIndex, zoom, selected, dispatch }) {
 	    const currentPlayer = players[currentPlayerIndex];
 	    const units = players.map(player => player.units
@@ -48043,13 +48030,13 @@
 
 
 /***/ },
-/* 374 */
+/* 377 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const tile_utils_1 = __webpack_require__(365);
-	const Hex_1 = __webpack_require__(375);
+	const Hex_1 = __webpack_require__(378);
 	const constants_1 = __webpack_require__(362);
 	function UnitComponent({ unit, onContextMenu, onClick, selected, scale }) {
 	    const { left, top } = tile_utils_1.getTilePosition(unit.tileId, scale);
@@ -48062,7 +48049,7 @@
 
 
 /***/ },
-/* 375 */
+/* 378 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -48074,14 +48061,14 @@
 
 
 /***/ },
-/* 376 */
+/* 379 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
 	const actions_1 = __webpack_require__(360);
-	const TownComponent_1 = __webpack_require__(377);
+	const TownComponent_1 = __webpack_require__(380);
 	function _Towns({ players, currentPlayerIndex, zoom, selected, dispatch }) {
 	    const currentPlayer = players[currentPlayerIndex];
 	    const towns = players.map((player, playerIndex) => player.towns
@@ -48105,13 +48092,13 @@
 
 
 /***/ },
-/* 377 */
+/* 380 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const tile_utils_1 = __webpack_require__(365);
-	const Hex_1 = __webpack_require__(375);
+	const Hex_1 = __webpack_require__(378);
 	const constants_1 = __webpack_require__(362);
 	function TownComponent({ town, onContextMenu, onClick, selected, scale }) {
 	    const { left, top } = tile_utils_1.getTilePosition(town.tileId, scale);
@@ -48124,20 +48111,20 @@
 
 
 /***/ },
-/* 378 */
+/* 381 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
 	const actions_1 = __webpack_require__(360);
-	const TileComponent_1 = __webpack_require__(379);
+	const TileComponent_1 = __webpack_require__(382);
 	const tile_utils_1 = __webpack_require__(365);
 	function _Tiles({ players, currentPlayerIndex, camera, tiles, dispatch }) {
 	    const currentPlayer = players[currentPlayerIndex];
 	    const visibleTiles = currentPlayer.seenTileIds
 	        .map(id => tiles[id])
-	        .filter(tile => tile_utils_1.isTileVisible(tile, camera)).map(tile => React.createElement(TileComponent_1.TileComponent, {tile: tile, key: tile.id, scale: camera.zoom, onContextMenu: () => dispatch(actions_1.maybeMoveCurrentUnit(tile))}));
+	        .filter(tile => tile_utils_1.isTileVisible(tile, camera)).map(tile => React.createElement(TileComponent_1.TileComponent, {tile: tile, key: tile.id, scale: camera.zoom, onContextMenu: () => dispatch(actions_1.maybeMoveCurrentUnit(tile)), onClick: () => dispatch(actions_1.deselect())}));
 	    return React.createElement("g", {className: 'tiles'}, visibleTiles);
 	}
 	exports._Tiles = _Tiles;
@@ -48150,16 +48137,16 @@
 
 
 /***/ },
-/* 379 */
+/* 382 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const tile_utils_1 = __webpack_require__(365);
-	const Hex_1 = __webpack_require__(375);
-	function TileComponent({ tile, onContextMenu, scale }) {
+	const Hex_1 = __webpack_require__(378);
+	function TileComponent({ tile, onContextMenu, onClick, scale }) {
 	    const { left, top } = tile_utils_1.getTilePosition(tile.id, scale);
-	    return (React.createElement("g", {onContextMenu: () => onContextMenu(), className: 'tile', transform: 'translate(' + left + ', ' + top + ')'}, 
+	    return (React.createElement("g", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'tile', transform: 'translate(' + left + ', ' + top + ')'}, 
 	        React.createElement(Hex_1.Hex, {scale: scale, pattern: tile.type})
 	    ));
 	}
@@ -48168,7 +48155,7 @@
 
 
 /***/ },
-/* 380 */
+/* 383 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -48201,14 +48188,22 @@
 
 
 /***/ },
-/* 381 */
+/* 384 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 385 */,
+/* 386 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
-	const icons_1 = __webpack_require__(369);
+	const icons_1 = __webpack_require__(387);
 	const actions_1 = __webpack_require__(360);
+	__webpack_require__(388);
 	const SettlerOptions = ({ dispatch }) => {
 	    return (React.createElement("div", {className: 'settler-options'}, 
 	        React.createElement("div", {className: 'option'}, 
@@ -48246,24 +48241,46 @@
 
 
 /***/ },
-/* 382 */
+/* 387 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	exports.IconReload = () => (React.createElement("svg", {viewBox: '0 0 1000 1000'}, 
+	    React.createElement("g", null, 
+	        React.createElement("path", {d: 'M987.4,466.9l-54,95.1l-54.7,96.4h-0.1c-2.7,4.4-7.5,7.4-13.1,7.4c-5.6,0-10.6-3.1-13.3-7.7l0,0L797.8,562l-54.1-95.4c-1.5-2.4-2.4-5.3-2.4-8.3c0-8.7,6.9-15.7,15.5-15.7h70.8C800.8,284.2,665.2,163.8,502,163.8c-63.6,0-123,18.3-173.4,50c-6.8,4.9-15.1,7.9-24,7.9c-22.8,0-41.3-18.8-41.3-42c0-15.9,8.8-29.8,21.6-36.9C348,103,422.4,80,502.1,80C711,80,883.5,237.7,911.1,442.5h63.5c8.5,0,15.4,7,15.4,15.7C990,461.4,989,464.4,987.4,466.9z M243.2,491.3h-71.5c-0.1,2.9-0.1,5.7-0.1,8.7c0,185.7,147.9,336.2,330.4,336.2c74.4,0,143-25,198.3-67.3c0,0,0,0.1,0.1,0.1c7.4-7.1,17.3-11.4,28.2-11.4c22.8,0,41.3,18.8,41.3,42c0,12.4-5.3,23.7-13.8,31.4c0,0,0,0,0,0.1c-0.3,0.2-0.6,0.5-0.9,0.7c-1,0.8-2.1,1.6-3.1,2.4c-69.4,53.8-156,85.8-250,85.8c-228,0-412.8-188.1-412.8-420c0-2.9,0-5.8,0.1-8.8h-64c-8.5,0-15.4-7-15.4-15.7c0-3.1,0.9-6,2.4-8.4l54.2-95.4l54.5-96h0c2.7-4.6,7.6-7.7,13.2-7.7c5.5,0,10.4,2.9,13.1,7.4h0.1l54.7,96.3l54,95.2c1.6,2.5,2.5,5.5,2.5,8.7C258.7,484.3,251.8,491.3,243.2,491.3z'})
+	    )
+	));
+	exports.IconHome = () => (React.createElement("svg", {viewBox: '0 -256 1792 1792'}, 
+	    React.createElement("g", {transform: 'matrix(1,0,0,-1,68.338983,1285.4237)'}, 
+	        React.createElement("path", {d: 'M 1408,544 V 64 Q 1408,38 1389,19 1370,0 1344,0 H 960 V 384 H 704 V 0 H 320 q -26,0 -45,19 -19,19 -19,45 v 480 q 0,1 0.5,3 0.5,2 0.5,3 l 575,474 575,-474 q 1,-2 1,-6 z m 223,69 -62,-74 q -8,-9 -21,-11 h -3 q -13,0 -21,7 L 832,1112 140,535 q -12,-8 -24,-7 -13,2 -21,11 l -62,74 q -8,10 -7,23.5 1,13.5 11,21.5 l 719,599 q 32,26 76,26 44,0 76,-26 l 244,-204 v 195 q 0,14 9,23 9,9 23,9 h 192 q 14,0 23,-9 9,-9 9,-23 V 840 l 219,-182 q 10,-8 11,-21.5 1,-13.5 -7,-23.5 z'})
+	    )
+	));
+	exports.IconNext = () => (React.createElement("svg", {viewBox: "0 0 477.175 477.175"}, 
+	    React.createElement("g", null, 
+	        React.createElement("path", {d: "M360.731,229.075l-225.1-225.1c-5.3-5.3-13.8-5.3-19.1,0s-5.3,13.8,0,19.1l215.5,215.5l-215.5,215.5 c-5.3, 5.3-5.3, 13.8, 0, 19.1c2.6, 2.6, 6.1, 4, 9.5, 4c3.4, 0, 6.9-1.3, 9.5-4l225.1-225.1C365.931, 242.875, 365.931, 234.275, 360.731, 229.075z"})
+	    )
+	));
+
+
+/***/ },
+/* 388 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 383 */,
-/* 384 */,
-/* 385 */,
-/* 386 */
+/* 389 */,
+/* 390 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
 	const actions_1 = __webpack_require__(360);
-	const icons_1 = __webpack_require__(369);
+	const icons_1 = __webpack_require__(387);
 	const reducer_1 = __webpack_require__(210);
+	__webpack_require__(391);
 	const _BottomMenu = ({ nextSelection, dispatch }) => {
 	    return (React.createElement("div", {className: 'bottom-menu'}, 
 	        nextSelection && React.createElement("div", {className: 'next', onClick: () => dispatch(actions_1.next())}, 
@@ -48277,6 +48294,19 @@
 	    nextSelection: !!reducer_1.getNextSelection(state),
 	}))(_BottomMenu);
 
+
+/***/ },
+/* 391 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 392 */,
+/* 393 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
 
 /***/ }
 /******/ ]);
