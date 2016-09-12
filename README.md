@@ -23,11 +23,10 @@ webpack
 
 ## DONE:
 
-- [X] Path finding, limited movement
-- [X] Visible area for each player
+- [X] Path finding, 'can-move' icons
+- [X] Simple fog of war
 - [X] Autosave of entire application state
 - [X] 3 tiles (water, grass, forest) with specific chance of generation and movement cost
-- [X] Simple algorithm showing marks on available tiles
 
 
 ## Technologies:
