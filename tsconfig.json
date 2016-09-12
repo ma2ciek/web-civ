@@ -4,6 +4,7 @@
         "target": "es6",
         "sourceMap": true,
         "noImplicitAny": true,
-        "module": "commonjs"
+        "module": "commonjs",
+        "experimentalDecorators": true
     }
 }

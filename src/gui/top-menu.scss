@@ -4,21 +4,19 @@
     background: #333;
     display: flex;
     align-items: center;
+    padding: 5px;
 
     span {
-        padding: 0 10px;
-    }
+        margin: 0 10px;
 
-    .current-player {
-        min-width: 180px;
-    }
-
-    .current-turn {
-        min-width: 80px;
+        &.action {
+            cursor: pointer;
+        }
     }
     
     svg {
         fill: white;
-        height: 30px;
+        height: 20px;
+        padding: 5px;
     }
 }

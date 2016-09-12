@@ -2,6 +2,7 @@ import * as React from 'react';
 import { getTilePosition } from '../tile-utils';
 import { Unit } from '../AppState';
 import { Hex } from './Hex';
+import { TILE_WIDTH, PLAYER_COLORS } from '../constants';
 
 interface UnitComponentProps {
     unit: Unit;
@@ -13,6 +14,7 @@ interface UnitComponentProps {
 
 export function UnitComponent({ unit, onContextMenu, onClick, selected, scale }: UnitComponentProps) {
     const { left, top } = getTilePosition(unit.tileId, scale);
+    const color = PLAYER_COLORS[unit.ownerId];
 
     return (
         <g onContextMenu={() => onContextMenu() } onClick={() => onClick() }
@@ -20,6 +22,15 @@ export function UnitComponent({ unit, onContextMenu, onClick, selected, scale }:
             transform={'translate(' + left + ', ' + top + ')'}>
 
             <Hex scale={scale} pattern={unit.name} />
+
+            <circle
+                r={ 20 * scale }
+                cx = { TILE_WIDTH * scale * 4 / 5 }
+                cy = { TILE_WIDTH * scale * 4 / 5 }
+                stroke='black'
+                strokeWidth={3 * scale}
+                fill={ color }>
+            </circle>
         </g>
     );
 }

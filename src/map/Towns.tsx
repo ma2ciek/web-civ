@@ -17,7 +17,7 @@ export function _Towns({ players, currentPlayerIndex, zoom, selected, dispatch }
 
     const towns = players.map((player, playerIndex) =>
         player.towns
-            .filter(town => currentPlayer.seenTileIds.indexOf(town.tile.id) > -1)
+            .filter(town => currentPlayer.seenTileIds.indexOf(town.tileId) > -1)
             .map(town => {
                 return (
                     <TownComponent

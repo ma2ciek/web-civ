@@ -11,8 +11,8 @@ export const PLAYER_COLORS = [
     'pink',
 ];
 
-export const MAP_WIDTH = 20;
-export const MAP_HEIGHT = 20;
+export const MAP_WIDTH = 30;
+export const MAP_HEIGHT = 30;
 
 export const TILE_WIDTH = 300;
 export const TILE_HEIGH = 300 * Math.sqrt(3) / 2;
@@ -22,3 +22,5 @@ export const tileTypes: { [type: string]: { chance: number, moveCost: number } }
     forest: { chance: 2, moveCost: 1.5 },
     water: { chance: 1, moveCost: 1000 },
 };
+
+export const STORAGE_KEY = 'CIV_DATA';

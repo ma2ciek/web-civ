@@ -9,6 +9,12 @@ body {
   overflow: hidden;
   position: relative; }
 
+.red {
+  color: red; }
+
+svg {
+  height: 100%; }
+
 .fade-enter {
   opacity: 0.01; }
   .fade-enter.fade-enter-active {
@@ -26,16 +32,16 @@ body {
   color: white;
   background: #333;
   display: flex;
-  align-items: center; }
+  align-items: center;
+  padding: 5px; }
   .top-menu span {
-    padding: 0 10px; }
-  .top-menu .current-player {
-    min-width: 180px; }
-  .top-menu .current-turn {
-    min-width: 80px; }
+    margin: 0 10px; }
+    .top-menu span.action {
+      cursor: pointer; }
   .top-menu svg {
     fill: white;
-    height: 30px; }
+    height: 20px;
+    padding: 5px; }
 
 .unit-side-menu {
   min-width: 180px;
@@ -49,6 +55,10 @@ body {
     padding: 10px 0;
     text-align: center;
     color: white; }
+  .unit-side-menu div {
+    color: white;
+    margin-bottom: 10px;
+    text-align: center; }
   .unit-side-menu .option {
     display: flex;
     justify-content: center;
@@ -65,6 +75,33 @@ body {
       transition: all 0.15s ease-in-out; }
     .unit-side-menu .option :hover svg {
       background: #e4820a; }
+
+.bottom-menu {
+  position: fixed;
+  bottom: 0;
+  pointer-events: none;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  width: 100%;
+  right: 200px; }
+  .bottom-menu .next {
+    margin-left: 15px;
+    pointer-events: all;
+    width: 80px;
+    height: 80px;
+    background-color: #fff;
+    padding: 20px;
+    background: #465298;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+    cursor: pointer; }
+    .bottom-menu .next:hover {
+      background: #606dbc; }
+    .bottom-menu .next svg {
+      width: 100%;
+      fill: #fff; }
 
 .map {
   width: 100%;

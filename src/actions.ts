@@ -28,3 +28,6 @@ export const selectTown = createAction(SELECT_TOWN, (town: Town) => town);
 
 export const ZOOM_MAP = 'ZOOM_MAP';
 export const zoomMap = createAction(ZOOM_MAP, (delta: number) => delta);
+
+export const NEXT = 'NEXT';
+export const next = createAction(NEXT);

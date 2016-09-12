@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { generatePlayers, generateMap, moveCamera, zoomMap } from '../actions';
+import { moveCamera, zoomMap } from '../actions';
 import { MapContent } from './MapContent';
 
 interface AppProps {
@@ -13,26 +13,21 @@ class _AnimatedMap extends React.Component<AppProps, {}> {
     private mouseY: number;
     private settedControls = false;
 
-    constructor(props: AppProps) {
-        super();
-
-        props.dispatch(generateMap());
-        props.dispatch(generatePlayers());
-    }
-
     public render() {
         return (
-            <div className='map' ref={(map) => this.setControls(map)}>
+            <div className='map' ref={(map) => this.setControls(map) }>
                 <MapContent />
             </div>
         );
     }
 
     private setControls(map: HTMLElement) {
+        const { dispatch } = this.props;
+
         if (!map || this.settedControls)
             return;
 
-        window.addEventListener('resize', () => this.forceUpdate());
+        window.addEventListener('resize', () => dispatch(moveCamera({ left: 0, top: 0 })));
 
         window.addEventListener('mouseenter', () => {
             this.mouseDown = false;
@@ -48,7 +43,7 @@ class _AnimatedMap extends React.Component<AppProps, {}> {
             map.addEventListener('wheel', (e) => {
                 const delta = (e as any).wheelDelta / 120 || e.deltaY / -53;
                 if (delta) {
-                    this.props.dispatch(zoomMap(delta));
+                    dispatch(zoomMap(delta));
                 }
             });
         } catch (err) { console.warn('wheel is not supported'); }
@@ -72,7 +67,7 @@ class _AnimatedMap extends React.Component<AppProps, {}> {
             if (!this.mouseDown)
                 return;
 
-            this.props.dispatch(moveCamera({
+            dispatch(moveCamera({
                 left: this.mouseX - e.pageX,
                 top: this.mouseY - e.pageY,
             }));

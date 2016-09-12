@@ -51,12 +51,25 @@
 	const redux_1 = __webpack_require__(193);
 	const reducer_1 = __webpack_require__(210);
 	const App_1 = __webpack_require__(367);
+	const actions_1 = __webpack_require__(360);
+	const constants_1 = __webpack_require__(362);
 	__webpack_require__(382);
-	const store = redux_1.createStore(reducer_1.default);
-	ReactDOM.render(React.createElement(react_redux_1.Provider, {store: store}, 
-	    React.createElement(App_1.default, null)
-	), document.getElementById('root'));
-	window.getState = store.getState;
+	localforage.getItem(constants_1.STORAGE_KEY).then((data) => {
+	    console.log(data);
+	    const store = data ? redux_1.createStore(reducer_1.default, data) : redux_1.createStore(reducer_1.default);
+	    if (!data) {
+	        store.dispatch(actions_1.generateMap());
+	        store.dispatch(actions_1.generatePlayers());
+	    }
+	    ReactDOM.render(React.createElement(react_redux_1.Provider, {store: store}, 
+	        React.createElement(App_1.default, null)
+	    ), document.getElementById('root'));
+	    window.getState = store.getState;
+	    store.subscribe(() => {
+	        const state = store.getState();
+	        localforage.setItem(constants_1.STORAGE_KEY, state);
+	    });
+	});
 
 
 /***/ },
@@ -25509,6 +25522,10 @@
 	            },
 	        });
 	    },
+	    [actions_1.NEXT]: (state) => {
+	        let nextSelection = getNextSelection(state);
+	        return join(state, { selection: nextSelection });
+	    },
 	    [actions_1.MAYBE_MOVE_BY]: (state, action) => {
 	        if (state.selection.type !== 'unit')
 	            return state;
@@ -25540,7 +25557,7 @@
 	            .filter(unit => unit.id === state.selection.id)[0];
 	        const playerId = state.players[state.currentPlayerIndex].id;
 	        const town = {
-	            tile: join(state.tiles[tileId], { ownerId: playerId }),
+	            tileId: tileId,
 	            ownerId: playerId,
 	            id: Math.random(),
 	            name: 'Unnamed town',
@@ -25548,13 +25565,7 @@
 	        };
 	        state = updateCurrentPlayer(state, p => ({
 	            units: p.units.filter(u => u.id !== state.selection.id),
-	            towns: [...p.towns, {
-	                    tile: join(state.tiles[tileId], { ownerId: p.id }),
-	                    ownerId: p.id,
-	                    id: Math.random(),
-	                    name: 'Unnamed town',
-	                    buildings: [],
-	                }],
+	            towns: [...p.towns, town],
 	        }));
 	        return join(state, {
 	            selection: join(state.selection, {
@@ -25603,13 +25614,32 @@
 	            type: 'town',
 	            id: towns[0].id,
 	        },
-	        tilePosition: tile_utils_1.getTilePosition(towns[0].tile.id, tileWidth),
+	        tilePosition: tile_utils_1.getTilePosition(towns[0].tileId, tileWidth),
 	    });
 	}
 	function getActiveUnit(state) {
 	    let currentPlayer = state.players[state.currentPlayerIndex];
 	    return currentPlayer.units
 	        .filter(u => u.id === state.selection.id)[0];
+	}
+	function getNextSelection(state) {
+	    if (getNextUnit(state)) {
+	        return { type: 'unit', id: getNextUnit(state).id };
+	    }
+	    if (getNextTown(state)) {
+	        return { type: 'town', id: getNextTown(state).id };
+	    }
+	}
+	exports.getNextSelection = getNextSelection;
+	function getNextUnit(state) {
+	    const currentPlayer = state.players[state.currentPlayerIndex];
+	    return currentPlayer.units.filter(u => u.movementLeft >= 1 && u.id !== state.selection.id)[0];
+	}
+	function getNextTown(state) {
+	    const currentPlayer = state.players[state.currentPlayerIndex];
+	    // TODO - town actions 
+	    // return currentPlayer.towns.filter(t => t.builded && t.id !== state.selection.id)[0];
+	    return null;
 	}
 
 
@@ -30815,6 +30845,8 @@
 	exports.selectTown = redux_actions_1.createAction(exports.SELECT_TOWN, (town) => town);
 	exports.ZOOM_MAP = 'ZOOM_MAP';
 	exports.zoomMap = redux_actions_1.createAction(exports.ZOOM_MAP, (delta) => delta);
+	exports.NEXT = 'NEXT';
+	exports.next = redux_actions_1.createAction(exports.NEXT);
 
 
 /***/ },
@@ -30826,18 +30858,33 @@
 	const utils_1 = __webpack_require__(363);
 	function generateTiles() {
 	    const tiles = [];
-	    let nextId = 0;
-	    for (let i = 0; i < constants_1.MAP_WIDTH; i++) {
-	        for (let j = 0; j < constants_1.MAP_HEIGHT; j++) {
-	            tiles.push({
+	    for (let i = 1; i < constants_1.MAP_WIDTH - 1; i++) {
+	        for (let j = 1; j < constants_1.MAP_HEIGHT - 1; j++) {
+	            const id = constants_1.MAP_HEIGHT * i + j;
+	            tiles[id] = {
 	                position: {
 	                    left: i,
 	                    top: j,
 	                },
-	                id: nextId++,
+	                id,
 	                ownerId: -1,
 	                type: utils_1.getRandomType(),
-	            });
+	            };
+	        }
+	    }
+	    for (let i = 0; i < constants_1.MAP_WIDTH * constants_1.MAP_HEIGHT; i++) {
+	        if (!tiles[i]) {
+	            const left = i / constants_1.MAP_WIDTH | 0;
+	            const top = i % constants_1.MAP_WIDTH;
+	            tiles[i] = {
+	                position: {
+	                    left: left,
+	                    top: top,
+	                },
+	                id: i,
+	                ownerId: -1,
+	                type: 'water',
+	            };
 	        }
 	    }
 	    return tiles;
@@ -30861,8 +30908,8 @@
 	    'orange',
 	    'pink',
 	];
-	exports.MAP_WIDTH = 20;
-	exports.MAP_HEIGHT = 20;
+	exports.MAP_WIDTH = 30;
+	exports.MAP_HEIGHT = 30;
 	exports.TILE_WIDTH = 300;
 	exports.TILE_HEIGH = 300 * Math.sqrt(3) / 2;
 	exports.tileTypes = {
@@ -30870,6 +30917,7 @@
 	    forest: { chance: 2, moveCost: 1.5 },
 	    water: { chance: 1, moveCost: 1000 },
 	};
+	exports.STORAGE_KEY = 'CIV_DATA';
 
 
 /***/ },
@@ -30901,10 +30949,11 @@
 	function generatePlayers({ allTiles }) {
 	    const players = [];
 	    let nextId = 0;
+	    const nonWaterTiles = allTiles.filter(tile => tile.type !== 'water');
 	    for (let i = 0; i < constants_1.PLAYERS_COUNT; i++) {
 	        const id = nextId++; // TODO
-	        const firstTile = allTiles[Math.random() * allTiles.length | 0];
-	        const around = tile_utils_1.getSurroundingTiles({ allTiles, tiles: [firstTile] })
+	        const firstTile = nonWaterTiles[Math.random() * nonWaterTiles.length | 0];
+	        const around = tile_utils_1.getSurroundingTiles({ allTiles: nonWaterTiles, tiles: [firstTile] })
 	            .filter(t => t.id !== firstTile.id);
 	        const secondTile = around[Math.random() * around.length | 0];
 	        players.push({
@@ -47768,22 +47817,18 @@
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
-	const actions_1 = __webpack_require__(360);
 	const TopMenu_1 = __webpack_require__(368);
 	const AnimatedMap_1 = __webpack_require__(370);
 	const UnitMenu_1 = __webpack_require__(381);
+	const BottomMenu_1 = __webpack_require__(386);
 	class App extends React.Component {
-	    constructor(props) {
-	        super();
-	        props.dispatch(actions_1.generateMap());
-	        props.dispatch(actions_1.generatePlayers());
-	    }
 	    render() {
 	        return (React.createElement("div", {className: 'app'}, 
 	            React.createElement(TopMenu_1.TopMenu, null), 
 	            React.createElement("div", {style: { display: 'flex' }}, 
 	                React.createElement(AnimatedMap_1.AnimatedMap, null), 
-	                React.createElement(UnitMenu_1.UnitMenu, null))));
+	                React.createElement(UnitMenu_1.UnitMenu, null)), 
+	            React.createElement(BottomMenu_1.BottomMenu, null)));
 	    }
 	}
 	Object.defineProperty(exports, "__esModule", { value: true });
@@ -47797,19 +47842,19 @@
 	"use strict";
 	const React = __webpack_require__(1);
 	const react_redux_1 = __webpack_require__(186);
-	const actions_1 = __webpack_require__(360);
-	const icons_1 = __webpack_require__(369);
 	const constants_1 = __webpack_require__(362);
-	const _TopMenu = ({ turn, players, currentPlayerIndex, dispatch }) => {
+	const _TopMenu = ({ turn, players, currentPlayerIndex }) => {
 	    const currentPlayer = players[currentPlayerIndex];
 	    if (!currentPlayer)
 	        return null;
+	    const color = constants_1.PLAYER_COLORS[currentPlayer.id];
+	    function reset() {
+	        localforage.removeItem(constants_1.STORAGE_KEY).then(() => location.href = '/');
+	    }
 	    return (React.createElement("div", {className: 'top-menu'}, 
-	        React.createElement("span", {className: 'current-player'}, 'Current player: ' + constants_1.PLAYER_COLORS[currentPlayer.id]), 
-	        React.createElement("span", {className: 'current-turn'}, 'Turn: ' + turn), 
-	        React.createElement("a", {href: '#', title: 'Next turn', onClick: () => dispatch(actions_1.nextTurn())}, 
-	            React.createElement(icons_1.IconReload, null)
-	        )));
+	        React.createElement("span", {style: { backgroundColor: color, width: 20, height: 20 }}), 
+	        React.createElement("span", null, 'Turn: ' + turn), 
+	        React.createElement("span", {className: 'action red', onClick: reset}, "RESTART")));
 	};
 	exports.TopMenu = react_redux_1.connect((state) => ({
 	    currentPlayerIndex: state.currentPlayerIndex,
@@ -47834,6 +47879,11 @@
 	        React.createElement("path", {d: 'M 1408,544 V 64 Q 1408,38 1389,19 1370,0 1344,0 H 960 V 384 H 704 V 0 H 320 q -26,0 -45,19 -19,19 -19,45 v 480 q 0,1 0.5,3 0.5,2 0.5,3 l 575,474 575,-474 q 1,-2 1,-6 z m 223,69 -62,-74 q -8,-9 -21,-11 h -3 q -13,0 -21,7 L 832,1112 140,535 q -12,-8 -24,-7 -13,2 -21,11 l -62,74 q -8,10 -7,23.5 1,13.5 11,21.5 l 719,599 q 32,26 76,26 44,0 76,-26 l 244,-204 v 195 q 0,14 9,23 9,9 23,9 h 192 q 14,0 23,-9 9,-9 9,-23 V 840 l 219,-182 q 10,-8 11,-21.5 1,-13.5 -7,-23.5 z'})
 	    )
 	));
+	exports.IconNext = () => (React.createElement("svg", {viewBox: "0 0 477.175 477.175"}, 
+	    React.createElement("g", null, 
+	        React.createElement("path", {d: "M360.731,229.075l-225.1-225.1c-5.3-5.3-13.8-5.3-19.1,0s-5.3,13.8,0,19.1l215.5,215.5l-215.5,215.5 c-5.3, 5.3-5.3, 13.8, 0, 19.1c2.6, 2.6, 6.1, 4, 9.5, 4c3.4, 0, 6.9-1.3, 9.5-4l225.1-225.1C365.931, 242.875, 365.931, 234.275, 360.731, 229.075z"})
+	    )
+	));
 
 
 /***/ },
@@ -47846,12 +47896,10 @@
 	const actions_1 = __webpack_require__(360);
 	const MapContent_1 = __webpack_require__(371);
 	class _AnimatedMap extends React.Component {
-	    constructor(props) {
-	        super();
+	    constructor() {
+	        super(...arguments);
 	        this.mouseDown = false;
 	        this.settedControls = false;
-	        props.dispatch(actions_1.generateMap());
-	        props.dispatch(actions_1.generatePlayers());
 	    }
 	    render() {
 	        return (React.createElement("div", {className: 'map', ref: (map) => this.setControls(map)}, 
@@ -47859,9 +47907,10 @@
 	        ));
 	    }
 	    setControls(map) {
+	        const { dispatch } = this.props;
 	        if (!map || this.settedControls)
 	            return;
-	        window.addEventListener('resize', () => this.forceUpdate());
+	        window.addEventListener('resize', () => dispatch(actions_1.moveCamera({ left: 0, top: 0 })));
 	        window.addEventListener('mouseenter', () => {
 	            this.mouseDown = false;
 	        });
@@ -47873,7 +47922,7 @@
 	            map.addEventListener('wheel', (e) => {
 	                const delta = e.wheelDelta / 120 || e.deltaY / -53;
 	                if (delta) {
-	                    this.props.dispatch(actions_1.zoomMap(delta));
+	                    dispatch(actions_1.zoomMap(delta));
 	                }
 	            });
 	        }
@@ -47895,7 +47944,7 @@
 	        map.addEventListener('mousemove', (e) => {
 	            if (!this.mouseDown)
 	                return;
-	            this.props.dispatch(actions_1.moveCamera({
+	            dispatch(actions_1.moveCamera({
 	                left: this.mouseX - e.pageX,
 	                top: this.mouseY - e.pageY,
 	            }));
@@ -48001,11 +48050,13 @@
 	const React = __webpack_require__(1);
 	const tile_utils_1 = __webpack_require__(365);
 	const Hex_1 = __webpack_require__(375);
+	const constants_1 = __webpack_require__(362);
 	function UnitComponent({ unit, onContextMenu, onClick, selected, scale }) {
 	    const { left, top } = tile_utils_1.getTilePosition(unit.tileId, scale);
+	    const color = constants_1.PLAYER_COLORS[unit.ownerId];
 	    return (React.createElement("g", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'unit' + (selected ? ' selected-unit' : ''), transform: 'translate(' + left + ', ' + top + ')'}, 
-	        React.createElement(Hex_1.Hex, {scale: scale, pattern: unit.name})
-	    ));
+	        React.createElement(Hex_1.Hex, {scale: scale, pattern: unit.name}), 
+	        React.createElement("circle", {r: 20 * scale, cx: constants_1.TILE_WIDTH * scale * 4 / 5, cy: constants_1.TILE_WIDTH * scale * 4 / 5, stroke: 'black', strokeWidth: 3 * scale, fill: color})));
 	}
 	exports.UnitComponent = UnitComponent;
 
@@ -48034,7 +48085,7 @@
 	function _Towns({ players, currentPlayerIndex, zoom, selected, dispatch }) {
 	    const currentPlayer = players[currentPlayerIndex];
 	    const towns = players.map((player, playerIndex) => player.towns
-	        .filter(town => currentPlayer.seenTileIds.indexOf(town.tile.id) > -1)
+	        .filter(town => currentPlayer.seenTileIds.indexOf(town.tileId) > -1)
 	        .map(town => {
 	        return (React.createElement(TownComponent_1.TownComponent, {town: town, scale: zoom, key: town.id, selected: player.id === currentPlayer.id && selected.id === town.id, onContextMenu: () => { }, onClick: () => {
 	            if (town.ownerId === currentPlayer.id) {
@@ -48063,7 +48114,7 @@
 	const Hex_1 = __webpack_require__(375);
 	const constants_1 = __webpack_require__(362);
 	function TownComponent({ town, onContextMenu, onClick, selected, scale }) {
-	    const { left, top } = tile_utils_1.getTilePosition(town.tile.id, scale);
+	    const { left, top } = tile_utils_1.getTilePosition(town.tileId, scale);
 	    return (React.createElement("g", {onContextMenu: () => onContextMenu(), onClick: () => onClick(), className: 'town' + (selected ? ' selected' : ''), transform: 'translate(' + left + ', ' + top + ')'}, 
 	        React.createElement(Hex_1.Hex, {scale: scale, pattern: 'middle-age-city'}), 
 	        React.createElement("text", {fontSize: 40 * scale, x: constants_1.TILE_WIDTH * scale / 2, textAnchor: 'middle', fill: 'white'}, town.name)));
@@ -48136,7 +48187,7 @@
 	    return (React.createElement("g", null, availableTiles.map(tile => {
 	        const position = tile_utils_1.getTilePosition(tile.id, camera.zoom);
 	        return (React.createElement("g", {transform: 'translate(' + position.left + ', ' + position.top + ')', key: tile.id}, 
-	            React.createElement("circle", {className: 'move-marker', cx: constants_1.TILE_WIDTH * camera.zoom / 2, cy: constants_1.TILE_WIDTH * camera.zoom / 2, r: 30 * camera.zoom, stroke: 'green', strokeWidth: '4', fill: 'yellow', opacity: 0.6})
+	            React.createElement("circle", {className: 'move-marker', cx: constants_1.TILE_WIDTH * camera.zoom / 2, cy: constants_1.TILE_WIDTH * camera.zoom / 2, r: 30 * camera.zoom, stroke: 'green', strokeWidth: 10 * camera.zoom, fill: 'yellow', opacity: 0.6})
 	        ));
 	    })));
 	}
@@ -48174,6 +48225,7 @@
 	            return null;
 	        return (React.createElement("div", {className: 'unit-side-menu'}, 
 	            React.createElement("h2", null, selectedUnit.name.toUpperCase()), 
+	            React.createElement("div", null, 'Movement: ' + selectedUnit.movementLeft + '/' + selectedUnit.movement), 
 	            React.createElement("div", {className: 'unit-options'}, this.renderOptions())));
 	    }
 	    ;
@@ -48198,6 +48250,33 @@
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 383 */,
+/* 384 */,
+/* 385 */,
+/* 386 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const React = __webpack_require__(1);
+	const react_redux_1 = __webpack_require__(186);
+	const actions_1 = __webpack_require__(360);
+	const icons_1 = __webpack_require__(369);
+	const reducer_1 = __webpack_require__(210);
+	const _BottomMenu = ({ nextSelection, dispatch }) => {
+	    return (React.createElement("div", {className: 'bottom-menu'}, 
+	        nextSelection && React.createElement("div", {className: 'next', onClick: () => dispatch(actions_1.next())}, 
+	            React.createElement(icons_1.IconNext, null)
+	        ), 
+	        React.createElement("div", {className: 'next', onClick: () => dispatch(actions_1.nextTurn())}, 
+	            React.createElement(icons_1.IconReload, null)
+	        )));
+	};
+	exports.BottomMenu = react_redux_1.connect((state) => ({
+	    nextSelection: !!reducer_1.getNextSelection(state),
+	}))(_BottomMenu);
+
 
 /***/ }
 /******/ ]);

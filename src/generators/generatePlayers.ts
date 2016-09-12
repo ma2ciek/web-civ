@@ -10,11 +10,13 @@ export function generatePlayers({ allTiles }: PlayerGeneratorProps) {
     const players: Player[] = [];
     let nextId = 0;
 
+    const nonWaterTiles = allTiles.filter(tile => tile.type !== 'water');
+
     for (let i = 0; i < PLAYERS_COUNT; i++) {
         const id = nextId++; // TODO
-        const firstTile = allTiles[Math.random() * allTiles.length | 0];
+        const firstTile = nonWaterTiles[Math.random() * nonWaterTiles.length | 0];
 
-        const around = getSurroundingTiles({ allTiles, tiles: [firstTile] })
+        const around = getSurroundingTiles({ allTiles: nonWaterTiles, tiles: [firstTile] })
             .filter(t => t.id !== firstTile.id);
 
         const secondTile = around[Math.random() * around.length | 0];

@@ -4,16 +4,34 @@ import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import reducer from './reducer';
 import App from './App';
+import { AppState } from './AppState';
+import { generatePlayers, generateMap } from './actions';
+import { STORAGE_KEY } from './constants';
+declare const localforage: LocalForage;
 
 import './app.scss';
 
-const store = createStore(reducer);
+localforage.getItem(STORAGE_KEY).then((data: AppState) => {
+    console.log(data);
+    const store = data ? createStore(reducer, data) : createStore(reducer);
 
-ReactDOM.render(
-    <Provider store={store}>
-        <App></App>
-    </Provider>,
-    document.getElementById('root')
-);
+    if (!data) {
+        store.dispatch(generateMap());
+        store.dispatch(generatePlayers());
+    }
 
-(window as any).getState = store.getState;
+    ReactDOM.render(
+        <Provider store={store}>
+            <App></App>
+        </Provider>,
+        document.getElementById('root')
+    );
+
+    (window as any).getState = store.getState;
+
+
+    store.subscribe(() => {
+        const state = store.getState();
+        localforage.setItem(STORAGE_KEY, state);
+    });
+});

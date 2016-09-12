@@ -13,7 +13,7 @@ const SettlerOptions = ({ dispatch }: UnitOptionsProps) => {
         <div className='settler-options'>
 
             <div className='option'>
-                <a onClick={() => dispatch(createCity())}>
+                <a onClick={() => dispatch(createCity()) }>
                     <IconHome />
                 </a>
             </div>
@@ -35,9 +35,10 @@ class _UnitMenu extends React.Component<UnitMenuProps, {}> {
 
         return (
             <div className='unit-side-menu'>
-                <h2>{selectedUnit.name.toUpperCase()}</h2>
+                <h2>{selectedUnit.name.toUpperCase() }</h2>
+                <div>{'Movement: ' + selectedUnit.movementLeft + '/' + selectedUnit.movement }</div>
                 <div className='unit-options'>
-                    {this.renderOptions()}
+                    { this.renderOptions() }
                 </div>
             </div>
         );

@@ -10,6 +10,7 @@ import {
     SELECT_UNIT,
     SELECT_TOWN,
     ZOOM_MAP,
+    NEXT,
 } from './actions';
 import { generateTiles } from './generators/generateTiles';
 import { generatePlayers } from './generators/generatePlayers';
@@ -108,6 +109,11 @@ export default handleActions<AppState, any>({
         });
     },
 
+    [NEXT]: (state) => {
+        let nextSelection = getNextSelection(state);
+        return join(state, { selection: nextSelection });
+    },
+
     [MAYBE_MOVE_BY]: (state, action) => {
         if (state.selection.type !== 'unit')
             return state;
@@ -155,7 +161,7 @@ export default handleActions<AppState, any>({
         const playerId = state.players[state.currentPlayerIndex].id;
 
         const town: Town = {
-            tile: join(state.tiles[tileId], { ownerId: playerId }),
+            tileId: tileId,
             ownerId: playerId,
             id: Math.random(),
             name: 'Unnamed town',
@@ -164,13 +170,7 @@ export default handleActions<AppState, any>({
 
         state = updateCurrentPlayer(state, p => ({
             units: p.units.filter(u => u.id !== state.selection.id),
-            towns: [...p.towns, {
-                tile: join(state.tiles[tileId], { ownerId: p.id }),
-                ownerId: p.id,
-                id: Math.random(),
-                name: 'Unnamed town',
-                buildings: [],
-            }],
+            towns: [...p.towns, town],
         }));
 
         return join(state, {
@@ -238,7 +238,7 @@ function getSelected(player: Player, tileWidth: number): Output {
             type: 'town',
             id: towns[0].id,
         },
-        tilePosition: getTilePosition(towns[0].tile.id, tileWidth),
+        tilePosition: getTilePosition(towns[0].tileId, tileWidth),
     });
 }
 
@@ -247,4 +247,26 @@ function getActiveUnit(state: AppState) {
 
     return currentPlayer.units
         .filter(u => u.id === state.selection.id)[0];
+}
+
+export function getNextSelection(state: AppState): Selection {
+    if (getNextUnit(state)) {
+        return { type: 'unit', id: getNextUnit(state).id };
+    }
+
+    if (getNextTown(state)) {
+        return { type: 'town', id: getNextTown(state).id };
+    }
+}
+
+function getNextUnit(state: AppState): Unit {
+    const currentPlayer = state.players[state.currentPlayerIndex];
+    return currentPlayer.units.filter(u => u.movementLeft >= 1 && u.id !== state.selection.id)[0];
+}
+
+function getNextTown(state: AppState): Town {
+    const currentPlayer = state.players[state.currentPlayerIndex];
+   // TODO - town actions 
+   // return currentPlayer.towns.filter(t => t.builded && t.id !== state.selection.id)[0];
+   return null;
 }

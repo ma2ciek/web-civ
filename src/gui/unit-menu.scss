@@ -1,7 +1,7 @@
 $menu-first-color: #465298;
 $menu-second-color: #606dbc;
 $icon-color: white;
-$icon-highlight-color: #e4820a; 
+$icon-highlight-color: #e4820a;
 
 .unit-side-menu {
     min-width: 180px;
@@ -16,6 +16,12 @@ $icon-highlight-color: #e4820a;
         padding: 10px 0;
         text-align: center;
         color: $icon-color;
+    }
+
+    div {
+        color: white;
+        margin-bottom: 10px;
+        text-align: center;
     }
 
     .option {

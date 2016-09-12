@@ -13,7 +13,7 @@ interface TownComponentProps {
 }
 
 export function TownComponent({ town, onContextMenu, onClick, selected, scale }: TownComponentProps) {
-    const { left, top } = getTilePosition(town.tile.id, scale);
+    const { left, top } = getTilePosition(town.tileId, scale);
 
     return (
         <g onContextMenu={() => onContextMenu() }

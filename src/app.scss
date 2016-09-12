@@ -11,9 +11,18 @@ body {
     position: relative;
 }
 
+.red { 
+    color: red;
+}
+
+svg {
+    height: 100%
+}
+
 @import 'animations/fade';
 
 @import 'gui/top-menu';
 @import 'gui/unit-menu';
+@import 'gui/bottom-menu';
 
 @import 'map/map';

@@ -49,7 +49,7 @@ export interface Position {
 export interface Town {
     ownerId: number;
     id: number;
-    tile: Tile;
+    tileId: number;
     buildings: Building[];
     name: string;
 }

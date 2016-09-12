@@ -36,7 +36,7 @@ function _SelectedUnitMovement({ selection, players, currentPlayerIndex, camera,
                             cy={ TILE_WIDTH * camera.zoom / 2 }
                             r={ 30 * camera.zoom }
                             stroke='green'
-                            strokeWidth='4'
+                            strokeWidth={10 * camera.zoom}
                             fill='yellow'
                             opacity={0.6}
                             />
