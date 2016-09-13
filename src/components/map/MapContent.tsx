@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { AppState, Player, Camera } from '../AppState';
-import { TILE_WIDTH, TILE_HEIGH } from '../constants';
+import { AppState, Player, Camera } from '../../AppState';
+import { TILE_WIDTH, TILE_HEIGH } from '../../constants';
 import { Patterns } from './Patterns';
 import { Units } from './Units';
 import { Towns } from './Towns';

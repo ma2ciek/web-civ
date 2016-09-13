@@ -1,6 +1,7 @@
 import { Tile, Player } from '../AppState';
 import { PLAYERS_COUNT } from '../constants';
-import { getSurroundingTiles } from '../tile-utils';
+import { getSurroundingTileIds } from '../utils';
+import * as intersection from 'lodash/intersection';
 
 interface PlayerGeneratorProps {
     allTiles: Tile[];
@@ -15,8 +16,12 @@ export function generatePlayers({ allTiles }: PlayerGeneratorProps) {
     for (let i = 0; i < PLAYERS_COUNT; i++) {
         const id = nextId++; // TODO
         const firstTile = nonWaterTiles[Math.random() * nonWaterTiles.length | 0];
+        const surroundingTileIds = getSurroundingTileIds([firstTile.id]);
 
-        const around = getSurroundingTiles({ allTiles: nonWaterTiles, tiles: [firstTile] })
+        const around = intersection(
+            surroundingTileIds.map(id => allTiles[id]),
+            nonWaterTiles
+        )
             .filter(t => t.id !== firstTile.id);
 
         const secondTile = around[Math.random() * around.length | 0];

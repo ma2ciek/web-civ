@@ -1,4 +1,4 @@
-import { tileTypes } from './constants';
+import { tileTypes } from '../constants';
 
 export function getRandomType() {
     const tileNames = Object.keys(tileTypes);
@@ -13,4 +13,8 @@ export function getRandomType() {
 
         random -= tileTypes[t].chance * multiplier;
     }
+}
+
+export function merge<X extends Y, Y>(x: X, y: Y): X {
+    return Object.assign({}, x, y);
 }

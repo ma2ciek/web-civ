@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { AppState, Unit } from '../AppState';
+import { AppState, Unit } from '../../AppState';
 import { IconHome } from '../icons';
-import { createCity } from '../actions';
+import { createCity } from '../../actions';
 
 import './unit-menu.scss';
 

@@ -35,10 +35,12 @@ module.exports = {
 
     plugins: [
         new ExtractTextPlugin('./build/app.css')
-    ]
+    ],
 
-    // externals: {
+    externals: {
+        localforage: 'localforage'
     //     'react': 'React',
     //     'react-dom': 'ReactDOM',
-    // },
+    },
+    
 }

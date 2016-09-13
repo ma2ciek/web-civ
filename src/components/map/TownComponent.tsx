@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { getTilePosition } from '../tile-utils';
-import { Town } from '../AppState';
+import { getTileMapPosition } from '../../utils';
+import { Town } from '../../AppState';
 import { Hex } from './Hex';
-import { TILE_WIDTH } from '../constants';
+import { TILE_WIDTH } from '../../constants';
+import * as classnames from 'classnames';
 
 interface TownComponentProps {
     scale: number;
@@ -13,12 +14,14 @@ interface TownComponentProps {
 }
 
 export function TownComponent({ town, onContextMenu, onClick, selected, scale }: TownComponentProps) {
-    const { left, top } = getTilePosition(town.tileId, scale);
+    const { left, top } = getTileMapPosition(town.tileId, scale);
 
     return (
-        <g onContextMenu={() => onContextMenu() }
-            onClick={() => onClick() }
-            className={'town' + (selected ? ' selected' : '') }
+        <g onContextMenu={() => onContextMenu()}
+            onClick={() => onClick()}
+            className={classnames('town', {
+                'selected': selected,
+            })}
             transform={'translate(' + left + ', ' + top + ')'}>
 
             <Hex scale={scale} pattern='middle-age-city' />
@@ -32,3 +35,4 @@ export function TownComponent({ town, onContextMenu, onClick, selected, scale }:
         </g>
     );
 };
+

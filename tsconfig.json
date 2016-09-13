@@ -5,6 +5,10 @@
         "sourceMap": true,
         "noImplicitAny": true,
         "module": "commonjs",
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "noUnusedLocals": true,
+        "noEmitOnError": true,
+        "noImplicitThis": true,
+        "noUnusedParameters": true
     }
 }

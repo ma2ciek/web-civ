@@ -10,10 +10,6 @@ export function generateTiles() {
             const id = MAP_HEIGHT * i + j;
 
             tiles[id] = {
-                position: {
-                    left: i,
-                    top: j,
-                },
                 id,
                 ownerId: -1,
                 type: getRandomType(),
@@ -22,20 +18,11 @@ export function generateTiles() {
     }
 
     for (let i = 0; i < MAP_WIDTH * MAP_HEIGHT; i++) {
-        if (!tiles[i]) {
-            const left = i / MAP_WIDTH | 0;
-            const top = i % MAP_WIDTH;
-
-            tiles[i] = {
-                position: {
-                    left: left,
-                    top: top,
-                },
-                id: i,
-                ownerId: -1,
-                type: 'water',
-            };
-        }
+        tiles[i] = tiles[i] || {
+            id: i,
+            ownerId: -1,
+            type: 'water',
+        };
     }
 
 

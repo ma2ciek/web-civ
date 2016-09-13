@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { AppState, Player } from '../AppState';
-import { PLAYER_COLORS, STORAGE_KEY } from '../constants';
+import { AppState, Player } from '../../AppState';
+import { PLAYER_COLORS, STORAGE_KEY } from '../../constants';
 
 import './top-menu.scss';
 
@@ -9,6 +9,7 @@ interface TopMenuProps {
     turn: number;
     currentPlayerIndex: number;
     players: Player[];
+    dispatch: Function;
 }
 
 declare const localforage: LocalForage;
@@ -30,7 +31,7 @@ const _TopMenu = ({ turn, players, currentPlayerIndex }: TopMenuProps) => {
         <div className='top-menu'>
             <span style={{ backgroundColor: color, width: 20, height: 20 }}></span>
             <span>{'Turn: ' + turn}</span>
-            <span className='action red' onClick={ reset }>RESTART</span>
+            <span className='action red' onClick={reset}>RESTART</span>
         </div>
     );
 };
@@ -40,5 +41,7 @@ export const TopMenu = connect(
         currentPlayerIndex: state.currentPlayerIndex,
         players: state.players,
         turn: state.turn,
-    })
+    }),
+    (dispatch: Function) => ({ dispatch })
 )(_TopMenu);
+

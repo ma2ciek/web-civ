@@ -15,7 +15,6 @@ export interface Selection {
 export interface Tile {
     id: number;
     ownerId: number;
-    position: Position;
     type: string;
 }
 

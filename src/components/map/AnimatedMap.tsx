@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { moveCamera, zoomMap } from '../actions';
+import { moveCamera, zoomMap } from '../../actions';
 import { MapContent } from './MapContent';
 
 import './map.scss';
@@ -60,7 +60,7 @@ class _AnimatedMap extends React.Component<AppProps, {}> {
             map.style.cursor = 'move';
         });
 
-        map.addEventListener('mouseup', (e: MouseEvent) => {
+        map.addEventListener('mouseup', () => {
             this.mouseDown = false;
             map.style.cursor = 'default';
         });

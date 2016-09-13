@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { AppState, Player, Selection } from '../AppState';
-import { selectUnit } from '../actions';
+import { AppState, Player, Selection } from '../../AppState';
+import { selectUnit } from '../../actions';
 import { UnitComponent } from './UnitComponent';
 
 interface UnitsProps {

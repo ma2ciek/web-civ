@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { AppState, Player, Selection, Camera, Tile } from '../AppState';
-import { maybeMoveCurrentUnit, deselect } from '../actions';
+import { AppState, Player, Camera, Tile } from '../../AppState';
+import { maybeMoveCurrentUnit, deselect } from '../../actions';
 import { TileComponent } from './TileComponent';
-import { isTileVisible } from '../tile-utils';
+import { isTileVisible } from '../../utils';
 
 interface TilesProps {
     players: Player[];

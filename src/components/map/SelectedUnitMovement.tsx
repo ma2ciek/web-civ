@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { AppState, Player, Selection, Tile, Camera} from '../AppState';
-import { getAvailableTilesForUnit, getTilePosition, isTileVisible} from '../tile-utils';
-import { TILE_WIDTH } from '../constants';
+import { AppState, Player, Selection, Tile, Camera} from '../../AppState';
+import { getAvailableTilesForUnit, getTileMapPosition, isTileVisible} from '../../utils';
+import { TILE_WIDTH } from '../../constants';
 
 interface SelectedUnitMovementProps {
     selection: Selection;
@@ -28,7 +28,7 @@ function _SelectedUnitMovement({ selection, players, currentPlayerIndex, camera,
     return (
         <g>
             { availableTiles.map(tile => {
-                const position = getTilePosition(tile.id, camera.zoom);
+                const position = getTileMapPosition(tile.id, camera.zoom);
                 return (
                     <g transform={'translate(' + position.left + ', ' + position.top + ')'} key={tile.id}>
                         <circle className='move-marker'
