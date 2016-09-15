@@ -48,7 +48,7 @@ export function getSelected(player: Player, zoom: number) {
     });
 }
 
-export function getSelectedUnit(state: AppState) {
+export function getSelectedUnit(state: AppState): Unit | undefined {
     let currentPlayer = state.players[state.currentPlayerIndex];
 
     return currentPlayer.units.filter(u =>

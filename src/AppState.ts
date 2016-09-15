@@ -27,14 +27,27 @@ export interface Player {
     towns: Town[];
 }
 
-export interface Unit {
+interface BaseUnit {
     tileId: number;
-    name: string;
     id: string;
     ownerId: number;
     movement: number;
     movementLeft: number;
+    hp: number;
+    hpLeft: number;
+    meleeDamage?: number;
 }
+
+export interface Settler extends BaseUnit {
+    name: 'settler';
+}
+
+export interface Warrior extends BaseUnit {
+    name: 'warrior';
+    meleeDamage: number;
+}
+
+export type Unit = Settler | Warrior;
 
 export interface Camera extends Position {
     zoom: number;

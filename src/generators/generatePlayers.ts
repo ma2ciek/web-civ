@@ -2,7 +2,7 @@ import { Tile, Player } from '../AppState';
 import { PLAYERS_COUNT } from '../constants';
 import { getSurroundingTileIds } from '../utils';
 import * as intersection from 'lodash/intersection';
-import { v4 } from 'node-uuid';
+import { v4 }  from 'node-uuid';
 
 interface PlayerGeneratorProps {
     allTiles: Tile[];
@@ -40,6 +40,8 @@ export function generatePlayers({ allTiles }: PlayerGeneratorProps) {
                 ownerId: id,
                 movement: 2,
                 movementLeft: 2,
+                hp: 10,
+                hpLeft: 10,
             }), ({
                 name: 'warrior',
                 tileId: secondTile.id,
@@ -47,6 +49,9 @@ export function generatePlayers({ allTiles }: PlayerGeneratorProps) {
                 ownerId: id,
                 movement: 3,
                 movementLeft: 3,
+                hp: 20,
+                hpLeft: 20,
+                meleeDamage: 5,
             })],
         });
     }

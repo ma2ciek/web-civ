@@ -1,4 +1,4 @@
-import { AppState, Selection } from '../AppState';
+import { AppState, Selection, Unit } from '../AppState';
 import { Action } from 'redux-actions';
 import * as utils from '../utils';
 
@@ -6,11 +6,11 @@ export function deselect(state: AppState) {
     return state;
 }
 
-export function selectUnit(state: AppState, action: Action<{ id: string }>) {
+export function selectUnit(state: AppState, action: Action<Unit>) {
     return utils.merge(state, {
         selection: {
             type: 'unit',
-            id: (action.payload as any).id,
+            id: (action.payload as Unit).id,
         } as Selection | null,
     });
 }

@@ -1,18 +1,20 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { AppState, Player, Selection } from '../../AppState';
-import { selectUnit } from '../../actions';
+import { AppState, Unit, Player, Selection } from '../../AppState';
+import { selectUnit, meleeAttack } from '../../actions';
 import { UnitComponent } from './UnitComponent';
+import { Action } from 'redux-actions';
+import { Dispatch } from 'redux';
 
 interface UnitsProps {
     players: Player[];
     currentPlayerIndex: number;
     zoom: number;
-    selected: Selection;
-    dispatch: Function;
+    selection: Selection | null;
+    dispatch: Dispatch<AppState>;
 }
 
-function _Units({ players, currentPlayerIndex, zoom, selected, dispatch }: UnitsProps) {
+function _Units({ players, currentPlayerIndex, zoom, selection, dispatch}: UnitsProps) {
     const currentPlayer = players[currentPlayerIndex];
 
     const units = players.map(player =>
@@ -25,26 +27,25 @@ function _Units({ players, currentPlayerIndex, zoom, selected, dispatch }: Units
                         unit={unit}
                         scale={zoom}
                         key={unit.id}
-                        selected={player.id === currentPlayer.id && selected.id === unit.id}
-                        onContextMenu={() => { } }
-                        onClick={() => {
-                            if (unit.ownerId === currentPlayer.id) {
-                                dispatch(selectUnit(unit));
-                            }
-                        } } />
+                        selected={player.id === currentPlayer.id && !!selection && selection.id === unit.id}
+                        onContextMenu={() =>
+                            unit.ownerId !== currentPlayer.id &&
+                            dispatch(meleeAttack(unit))}
+                        onClick={() => unit.ownerId === currentPlayer.id && dispatch(selectUnit(unit))} />
                 );
             })
     );
 
-    return <g className='units'>{ units }</g>;
+    return <g className='units'>{units}</g>;
 }
 
 export const Units = connect(
     (state: AppState) => ({
         currentPlayerIndex: state.currentPlayerIndex,
         players: state.players,
-        selected: state.selection,
+        selection: state.selection,
         zoom: state.camera.zoom,
-    })
+    }),
+    (dispatch: Dispatch<AppState>) => ({ dispatch })
 )(_Units);
 

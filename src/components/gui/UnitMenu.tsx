@@ -40,6 +40,8 @@ class _UnitMenu extends React.Component<UnitMenuProps, {}> {
             <div className='unit-side-menu'>
                 <h2>{selectedUnit.name.toUpperCase()}</h2>
                 <div>{'Movement: ' + selectedUnit.movementLeft + '/' + selectedUnit.movement}</div>
+                <div>{'Hp: ' + selectedUnit.hpLeft + '/' + selectedUnit.hp}</div>
+                {selectedUnit.name === 'warrior' && <div>{'Melee dmg: ' + selectedUnit.meleeDamage}</div>}
                 <div className='unit-options'>
                     {this.renderOptions()}
                 </div>

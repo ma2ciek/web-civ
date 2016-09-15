@@ -3,7 +3,7 @@ import { AppState } from '../AppState';
 import { createPlayers, nextTurn } from './player';
 import { generateTiles } from '../generators';
 import { handleActions } from 'redux-actions';
-import { maybeMoveBy, createCity } from './unit';
+import { maybeMoveBy, createCity, meleeAttack, distanceAttack } from './unit';
 import { moveCamera, zoomMap } from './camera';
 import { selectUnit, deselect, selectTown, nextSelection } from './selection';
 
@@ -31,6 +31,8 @@ export default handleActions<AppState, {}>({
 
     [actions.MAYBE_MOVE_BY]: maybeMoveBy,
     [actions.CREATE_CITY]: createCity,
+    [actions.DISTANCE_ATTACK]: distanceAttack,
+    [actions.MELEE_ATTACK]: meleeAttack,
 
     [actions.ZOOM_MAP]: zoomMap,
     [actions.MOVE_CAMERA]: moveCamera,

@@ -2072,19 +2072,25 @@
 	"use strict";
 	
 	var redux_actions_1 = __webpack_require__(37);
-	exports.GENERATE_PLAYERS = 'GENERATE_PLAYERS';
-	exports.MOVE_CAMERA = 'MOVE_CAMERA';
 	exports.NEXT_TURN = 'NEXT_TURN';
-	exports.MAYBE_MOVE_BY = 'MAYBE_MOVE_BY';
-	exports.generatePlayers = redux_actions_1.createAction(exports.GENERATE_PLAYERS);
-	exports.moveCamera = redux_actions_1.createAction(exports.MOVE_CAMERA, function (_ref) {
-	  var left = _ref.left;
-	  var top = _ref.top;
-	  return { left: left, top: top };
-	});
 	exports.nextTurn = redux_actions_1.createAction(exports.NEXT_TURN);
+	exports.MAYBE_MOVE_BY = 'MAYBE_MOVE_BY';
 	exports.maybeMoveCurrentUnit = redux_actions_1.createAction(exports.MAYBE_MOVE_BY, function (tile) {
 	  return tile.id;
+	});
+	exports.MELEE_ATTACK = 'MELEE_ATTACK';
+	exports.meleeAttack = redux_actions_1.createAction(exports.MELEE_ATTACK, function (enemyId) {
+	  return enemyId;
+	});
+	exports.DISTANCE_ATTACK = 'DISTANCE_ATTACK';
+	exports.distanceAttack = redux_actions_1.createAction(exports.DISTANCE_ATTACK, function (enemyId) {
+	  return enemyId;
+	});
+	exports.GENERATE_PLAYERS = 'GENERATE_PLAYERS';
+	exports.generatePlayers = redux_actions_1.createAction(exports.GENERATE_PLAYERS);
+	exports.MOVE_CAMERA = 'MOVE_CAMERA';
+	exports.moveCamera = redux_actions_1.createAction(exports.MOVE_CAMERA, function (pos) {
+	  return pos;
 	});
 	exports.CREATE_CITY = 'CREATE_CITY';
 	exports.createCity = redux_actions_1.createAction(exports.CREATE_CITY);
@@ -7346,7 +7352,7 @@
 	    var players = _ref.players;
 	    var currentPlayerIndex = _ref.currentPlayerIndex;
 	    var zoom = _ref.zoom;
-	    var selected = _ref.selected;
+	    var selection = _ref.selection;
 	    var dispatch = _ref.dispatch;
 	
 	    var currentPlayer = players[currentPlayerIndex];
@@ -7354,10 +7360,10 @@
 	        return player.units.filter(function (unit) {
 	            return currentPlayer.seenTileIds.indexOf(unit.tileId) > -1;
 	        }).map(function (unit) {
-	            return React.createElement(UnitComponent_1.UnitComponent, { unit: unit, scale: zoom, key: unit.id, selected: player.id === currentPlayer.id && selected.id === unit.id, onContextMenu: function onContextMenu() {}, onClick: function onClick() {
-	                    if (unit.ownerId === currentPlayer.id) {
-	                        dispatch(actions_1.selectUnit(unit));
-	                    }
+	            return React.createElement(UnitComponent_1.UnitComponent, { unit: unit, scale: zoom, key: unit.id, selected: player.id === currentPlayer.id && !!selection && selection.id === unit.id, onContextMenu: function onContextMenu() {
+	                    return unit.ownerId !== currentPlayer.id && dispatch(actions_1.meleeAttack(unit));
+	                }, onClick: function onClick() {
+	                    return unit.ownerId === currentPlayer.id && dispatch(actions_1.selectUnit(unit));
 	                } });
 	        });
 	    });
@@ -7367,9 +7373,11 @@
 	    return {
 	        currentPlayerIndex: state.currentPlayerIndex,
 	        players: state.players,
-	        selected: state.selection,
+	        selection: state.selection,
 	        zoom: state.camera.zoom
 	    };
+	}, function (dispatch) {
+	    return { dispatch: dispatch };
 	})(_Units);
 
 /***/ },
@@ -24720,7 +24728,7 @@
 	            var selectedUnit = this.props.selectedUnit;
 	
 	            if (!selectedUnit) return null;
-	            return React.createElement("div", { className: 'unit-side-menu' }, React.createElement("h2", null, selectedUnit.name.toUpperCase()), React.createElement("div", null, 'Movement: ' + selectedUnit.movementLeft + '/' + selectedUnit.movement), React.createElement("div", { className: 'unit-options' }, this.renderOptions()));
+	            return React.createElement("div", { className: 'unit-side-menu' }, React.createElement("h2", null, selectedUnit.name.toUpperCase()), React.createElement("div", null, 'Movement: ' + selectedUnit.movementLeft + '/' + selectedUnit.movement), React.createElement("div", null, 'Hp: ' + selectedUnit.hpLeft + '/' + selectedUnit.hp), selectedUnit.name === 'warrior' && React.createElement("div", null, 'Melee dmg: ' + selectedUnit.meleeDamage), React.createElement("div", { className: 'unit-options' }, this.renderOptions()));
 	        }
 	    }, {
 	        key: 'renderOptions',
@@ -24866,7 +24874,7 @@
 	    selection: null
 	};
 	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = redux_actions_1.handleActions((_redux_actions_1$hand = {}, _defineProperty(_redux_actions_1$hand, actions.GENERATE_PLAYERS, player_1.createPlayers), _defineProperty(_redux_actions_1$hand, actions.NEXT_TURN, player_1.nextTurn), _defineProperty(_redux_actions_1$hand, actions.DESELECT, selection_1.deselect), _defineProperty(_redux_actions_1$hand, actions.SELECT_UNIT, selection_1.selectUnit), _defineProperty(_redux_actions_1$hand, actions.SELECT_TOWN, selection_1.selectTown), _defineProperty(_redux_actions_1$hand, actions.NEXT_SELECTION, selection_1.nextSelection), _defineProperty(_redux_actions_1$hand, actions.MAYBE_MOVE_BY, unit_1.maybeMoveBy), _defineProperty(_redux_actions_1$hand, actions.CREATE_CITY, unit_1.createCity), _defineProperty(_redux_actions_1$hand, actions.ZOOM_MAP, camera_1.zoomMap), _defineProperty(_redux_actions_1$hand, actions.MOVE_CAMERA, camera_1.moveCamera), _redux_actions_1$hand), exports.initialState);
+	exports.default = redux_actions_1.handleActions((_redux_actions_1$hand = {}, _defineProperty(_redux_actions_1$hand, actions.GENERATE_PLAYERS, player_1.createPlayers), _defineProperty(_redux_actions_1$hand, actions.NEXT_TURN, player_1.nextTurn), _defineProperty(_redux_actions_1$hand, actions.DESELECT, selection_1.deselect), _defineProperty(_redux_actions_1$hand, actions.SELECT_UNIT, selection_1.selectUnit), _defineProperty(_redux_actions_1$hand, actions.SELECT_TOWN, selection_1.selectTown), _defineProperty(_redux_actions_1$hand, actions.NEXT_SELECTION, selection_1.nextSelection), _defineProperty(_redux_actions_1$hand, actions.MAYBE_MOVE_BY, unit_1.maybeMoveBy), _defineProperty(_redux_actions_1$hand, actions.CREATE_CITY, unit_1.createCity), _defineProperty(_redux_actions_1$hand, actions.DISTANCE_ATTACK, unit_1.distanceAttack), _defineProperty(_redux_actions_1$hand, actions.MELEE_ATTACK, unit_1.meleeAttack), _defineProperty(_redux_actions_1$hand, actions.ZOOM_MAP, camera_1.zoomMap), _defineProperty(_redux_actions_1$hand, actions.MOVE_CAMERA, camera_1.moveCamera), _redux_actions_1$hand), exports.initialState);
 
 /***/ },
 /* 213 */
@@ -24989,14 +24997,19 @@
 	                id: node_uuid_1.v4(),
 	                ownerId: id,
 	                movement: 2,
-	                movementLeft: 2
+	                movementLeft: 2,
+	                hp: 10,
+	                hpLeft: 10
 	            }, {
 	                name: 'warrior',
 	                tileId: secondTile.id,
 	                id: node_uuid_1.v4(),
 	                ownerId: id,
 	                movement: 3,
-	                movementLeft: 3
+	                movementLeft: 3,
+	                hp: 20,
+	                hpLeft: 20,
+	                meleeDamage: 5
 	            }]
 	        });
 	    };
@@ -29623,11 +29636,11 @@
 	var utils_1 = __webpack_require__(190);
 	var generators_1 = __webpack_require__(214);
 	var player_1 = __webpack_require__(213);
-	var utils_2 = __webpack_require__(190);
 	exports.maybeMoveBy = function (state, action) {
 	    if (state.selection && state.selection.type !== 'unit') return state;
 	    var currentPlayer = state.players[state.currentPlayerIndex];
 	    var activeUnit = utils_1.getSelectedUnit(state);
+	    if (!activeUnit) return state;
 	    var movementAvailableMap = utils_1.getAvailableMoves(state.tiles[activeUnit.tileId], currentPlayer.seenTileIds.map(function (id) {
 	        return state.tiles[id];
 	    }), activeUnit.movementLeft);
@@ -29661,12 +29674,34 @@
 	            towns: [].concat(_toConsumableArray(p.towns), [town])
 	        };
 	    });
-	    return utils_2.merge(state, {
-	        selection: utils_2.merge(state.selection, {
+	    return utils_1.merge(state, {
+	        selection: utils_1.merge(state.selection, {
 	            type: 'town',
 	            id: town.id
 	        })
 	    });
+	};
+	exports.distanceAttack = function (state, action) {
+	    return state;
+	};
+	exports.meleeAttack = function (state, action) {
+	    var currentUnit = utils_1.getSelectedUnit(state);
+	    var enemy = action.payload;
+	    if (!enemy || !currentUnit || !currentUnit.meleeDamage || currentUnit.movementLeft < 1) return state;
+	    var ids = utils_1.getSurroundingTileIds([currentUnit.tileId]);
+	    if (ids.indexOf(enemy.tileId) === -1) return state;
+	    var hpLeft = enemy.hpLeft - currentUnit.meleeDamage;
+	    if (hpLeft <= 0) {
+	        state = removeUnitFromState(state, enemy);
+	        state = updateUnit(state, currentUnit, {
+	            tileId: enemy.tileId,
+	            movementLeft: 0
+	        });
+	    } else {
+	        state = updateUnit(state, enemy, { hpLeft: hpLeft });
+	        state = updateUnit(state, currentUnit, { movementLeft: 0 });
+	    }
+	    return state;
 	};
 	function updateSelectedUnit(state, fn) {
 	    return updateCurrentPlayer(state, function (p) {
@@ -29675,15 +29710,34 @@
 	                if (!state.selection) {
 	                    return;
 	                }
-	                return unit.id === state.selection.id && state.selection.type === 'unit' ? utils_2.merge(unit, fn(unit)) : unit;
+	                return unit.id === state.selection.id && state.selection.type === 'unit' ? utils_1.merge(unit, fn(unit)) : unit;
 	            })
 	        };
 	    });
 	}
 	function updateCurrentPlayer(state, fn) {
 	    var currentPlayer = state.players[state.currentPlayerIndex];
-	    return utils_2.merge(state, {
-	        players: [].concat(_toConsumableArray(state.players.slice(0, state.currentPlayerIndex)), [utils_2.merge(currentPlayer, fn(currentPlayer))], _toConsumableArray(state.players.slice(state.currentPlayerIndex + 1)))
+	    return utils_1.merge(state, {
+	        players: [].concat(_toConsumableArray(state.players.slice(0, state.currentPlayerIndex)), [utils_1.merge(currentPlayer, fn(currentPlayer))], _toConsumableArray(state.players.slice(state.currentPlayerIndex + 1)))
+	    });
+	}
+	function updateUnit(state, unit, enhancement) {
+	    var player = state.players[unit.ownerId];
+	    var unitIndex = player.units.indexOf(unit);
+	    return updatePlayer(state, state.players[unit.ownerId], {
+	        units: [].concat(_toConsumableArray(player.units.slice(0, unitIndex)), [utils_1.merge(unit, enhancement)], _toConsumableArray(player.units.slice(unitIndex + 1)))
+	    });
+	}
+	function removeUnitFromState(state, unit) {
+	    var player = state.players[unit.ownerId];
+	    var unitIndex = player.units.indexOf(unit);
+	    return updatePlayer(state, player, {
+	        units: [].concat(_toConsumableArray(player.units.slice(0, unitIndex)), _toConsumableArray(player.units.slice(unitIndex + 1)))
+	    });
+	}
+	function updatePlayer(state, player, enhancement) {
+	    return utils_1.merge(state, {
+	        players: [].concat(_toConsumableArray(state.players.slice(0, player.id)), [utils_1.merge(player, enhancement)], _toConsumableArray(state.players.slice(player.id + 1)))
 	    });
 	}
 

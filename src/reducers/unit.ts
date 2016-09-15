@@ -1,9 +1,8 @@
 import { AppState, Unit, Player, Selection } from '../AppState';
 import { Action } from 'redux-actions';
-import { getSelectedUnit, getAvailableMoves } from '../utils';
+import { merge, getSelectedUnit, getAvailableMoves, getSurroundingTileIds } from '../utils';
 import { generateTown } from '../generators';
 import { updatePlayerSeenTiles } from './player';
-import { merge } from '../utils';
 
 export const maybeMoveBy = (state: AppState, action: Action<number>) => {
     if (state.selection && state.selection.type !== 'unit')
@@ -12,6 +11,9 @@ export const maybeMoveBy = (state: AppState, action: Action<number>) => {
     let currentPlayer = state.players[state.currentPlayerIndex];
 
     const activeUnit = getSelectedUnit(state);
+
+    if (!activeUnit)
+        return state;
 
     const movementAvailableMap = getAvailableMoves(
         state.tiles[activeUnit.tileId],
@@ -57,6 +59,36 @@ export const createCity = (state: AppState) => {
     });
 };
 
+export const distanceAttack = (state: AppState, action: Action<Unit>) => {
+    return state;
+};
+
+export const meleeAttack = (state: AppState, action: Action<Unit>) => {
+    const currentUnit = getSelectedUnit(state);
+    const enemy = action.payload;
+
+    if (!enemy || !currentUnit || !currentUnit.meleeDamage || currentUnit.movementLeft < 1)
+        return state;
+
+    const ids = getSurroundingTileIds([currentUnit.tileId]);
+    if (ids.indexOf(enemy.tileId) === -1)
+        return state;
+
+    const hpLeft = enemy.hpLeft - currentUnit.meleeDamage;
+
+    if (hpLeft <= 0) {
+        state = removeUnitFromState(state, enemy);
+        state = updateUnit(state, currentUnit, {
+            tileId: enemy.tileId,
+            movementLeft: 0,
+        });
+    } else {
+        state = updateUnit(state, enemy, { hpLeft });
+        state = updateUnit(state, currentUnit, { movementLeft: 0 });
+    }
+
+    return state;
+}
 
 function updateSelectedUnit(state: AppState, fn: (unit: Unit) => {}) {
     return updateCurrentPlayer(state, p => ({
@@ -78,6 +110,40 @@ function updateCurrentPlayer(state: AppState, fn: (p: Player) => {}) {
             ...state.players.slice(0, state.currentPlayerIndex),
             merge(currentPlayer, fn(currentPlayer)),
             ...state.players.slice(state.currentPlayerIndex + 1),
+        ],
+    });
+}
+
+function updateUnit(state: AppState, unit: Unit, enhancement: {}) {
+    const player = state.players[unit.ownerId];
+    const unitIndex = player.units.indexOf(unit);
+    return updatePlayer(state, state.players[unit.ownerId], {
+        units: [
+            ...player.units.slice(0, unitIndex),
+            merge(unit, enhancement),
+            ...player.units.slice(unitIndex + 1),
+        ],
+    });
+}
+
+function removeUnitFromState(state: AppState, unit: Unit) {
+    let player = state.players[unit.ownerId];
+    const unitIndex = player.units.indexOf(unit);
+
+    return updatePlayer(state, player, {
+        units: [
+            ...player.units.slice(0, unitIndex),
+            ...player.units.slice(unitIndex + 1),
+        ],
+    });
+}
+
+function updatePlayer(state: AppState, player: Player, enhancement: {}) {
+    return merge(state, {
+        players: [
+            ...state.players.slice(0, player.id),
+            merge(player, enhancement),
+            ...state.players.slice(player.id + 1),
         ],
     });
 }
