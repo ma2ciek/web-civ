@@ -24,4 +24,4 @@ class App extends React.Component<AppProps, {}> {
     }
 }
 
-export default connect(null, null)(App);
+export default connect(() => ({}), () => ({}))(App);

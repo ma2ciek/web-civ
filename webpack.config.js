@@ -1,26 +1,28 @@
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const glob = require('glob');
 
 module.exports = {
     entry: {
         app: './src/index.tsx',
+        test: glob.sync('./src/**/*-spec.ts')
     },
 
     output: {
-        filename: './build/app.js',
+        filename: './build/[name].js',
     },
 
     devtool: 'source-map',
 
     resolve: {
         extensions: ['', 'webpack.config.js', '.web.js', '.ts', '.tsx', '.js'],
-        alias: { 'react$': 'react/lib/ReactWithAddons.js', 'react-dom$': 'react/lib/ReactDOM.js' }
+        // alias: { 'react$': 'react/lib/ReactWithAddons.js', 'react-dom$': 'react/lib/ReactDOM.js' }
     },
 
     module: {
         loaders: [
             {
                 test: /\.tsx?$/,
-                loader: 'ts-loader'
+                loader: 'babel?presets[]=es2015!ts-loader'
             },
             {
                 test: /\.scss$/,
@@ -34,13 +36,13 @@ module.exports = {
     },
 
     plugins: [
-        new ExtractTextPlugin('./build/app.css')
+        new ExtractTextPlugin('./build/[name].css')
     ],
 
     externals: {
-        localforage: 'localforage'
-    //     'react': 'React',
-    //     'react-dom': 'ReactDOM',
+        'localforage': 'localforage',
+        'react': 'React',
+        'react-dom': 'ReactDOM',
     },
     
 }

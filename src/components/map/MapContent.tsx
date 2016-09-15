@@ -10,13 +10,10 @@ import { SelectedUnitMovement } from './SelectedUnitMovement';
 
 interface MapContentProps {
     camera: Camera;
-    players: Player[];
-    currentPlayerIndex: number;
+    currentPlayer: Player;
 }
 
-function _MapContent({ camera, players, currentPlayerIndex }: MapContentProps) {
-    const currentPlayer = players[currentPlayerIndex];
-
+function _MapContent({ camera, currentPlayer }: MapContentProps) {
     const transform = (
         'translate(' +
         (-camera.left + window.innerWidth / 2 - TILE_WIDTH * camera.zoom / 2) + ' ' +
@@ -24,7 +21,7 @@ function _MapContent({ camera, players, currentPlayerIndex }: MapContentProps) {
     );
 
     if (!currentPlayer)
-        return null;
+        return <svg></svg>;
 
     return (
         <svg width='100%' height='100vh'>
@@ -42,8 +39,7 @@ function _MapContent({ camera, players, currentPlayerIndex }: MapContentProps) {
 
 export const MapContent = connect(
     (state: AppState) => ({
-        currentPlayerIndex: state.currentPlayerIndex,
-        players: state.players,
+        currentPlayer: state.players[state.currentPlayerIndex],
         camera: state.camera,
     })
 )(_MapContent);

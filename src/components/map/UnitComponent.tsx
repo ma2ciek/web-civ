@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { getTileMapPosition } from '../../utils';
+import { getTileCameraPosition } from '../../utils';
 import { Unit } from '../../AppState';
 import { Hex } from './Hex';
 import { TILE_WIDTH, PLAYER_COLORS } from '../../constants';
@@ -13,7 +13,7 @@ interface UnitComponentProps {
 }
 
 export function UnitComponent({ unit, onContextMenu, onClick, selected, scale }: UnitComponentProps) {
-    const { left, top } = getTileMapPosition(unit.tileId, scale);
+    const { left, top } = getTileCameraPosition(unit.tileId, scale);
     const color = PLAYER_COLORS[unit.ownerId];
 
     return (

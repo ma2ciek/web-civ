@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { getTileMapPosition } from '../../utils';
+import { getTileCameraPosition } from '../../utils';
 import { Town } from '../../AppState';
 import { Hex } from './Hex';
 import { TILE_WIDTH } from '../../constants';
@@ -14,7 +14,7 @@ interface TownComponentProps {
 }
 
 export function TownComponent({ town, onContextMenu, onClick, selected, scale }: TownComponentProps) {
-    const { left, top } = getTileMapPosition(town.tileId, scale);
+    const { left, top } = getTileCameraPosition(town.tileId, scale);
 
     return (
         <g onContextMenu={() => onContextMenu()}

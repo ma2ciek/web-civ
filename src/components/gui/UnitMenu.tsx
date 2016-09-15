@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { AppState, Unit } from '../../AppState';
 import { IconHome } from '../icons';
 import { createCity } from '../../actions';
+import { getSelectedUnit } from '../../utils';
 
 import './unit-menu.scss';
 
@@ -15,7 +16,7 @@ const SettlerOptions = ({ dispatch }: UnitOptionsProps) => {
         <div className='settler-options'>
 
             <div className='option'>
-                <a onClick={() => dispatch(createCity()) }>
+                <a onClick={() => dispatch(createCity())}>
                     <IconHome />
                 </a>
             </div>
@@ -37,10 +38,10 @@ class _UnitMenu extends React.Component<UnitMenuProps, {}> {
 
         return (
             <div className='unit-side-menu'>
-                <h2>{selectedUnit.name.toUpperCase() }</h2>
-                <div>{'Movement: ' + selectedUnit.movementLeft + '/' + selectedUnit.movement }</div>
+                <h2>{selectedUnit.name.toUpperCase()}</h2>
+                <div>{'Movement: ' + selectedUnit.movementLeft + '/' + selectedUnit.movement}</div>
                 <div className='unit-options'>
-                    { this.renderOptions() }
+                    {this.renderOptions()}
                 </div>
             </div>
         );
@@ -61,8 +62,7 @@ class _UnitMenu extends React.Component<UnitMenuProps, {}> {
 
 export const UnitMenu = connect(
     (state: AppState) => ({
-        selectedUnit: state.selection.type === 'unit' && state.players[state.currentPlayerIndex].units
-            .filter(unit => unit.id === state.selection.id)[0],
+        selectedUnit: getSelectedUnit(state),
     })
 )(_UnitMenu);
 

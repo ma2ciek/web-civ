@@ -13,6 +13,7 @@ export function getRandomType() {
 
         random -= tileTypes[t].chance * multiplier;
     }
+    throw new Error('missing type');
 }
 
 export function merge<X extends Y, Y>(x: X, y: Y): X {

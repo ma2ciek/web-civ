@@ -13,7 +13,7 @@ export const moveCamera = createAction<Position>(
 );
 
 export const nextTurn = createAction(NEXT_TURN);
-export const maybeMoveCurrentUnit = createAction(MAYBE_MOVE_BY, (tile: Tile) => ({ tileId: tile.id }));
+export const maybeMoveCurrentUnit = createAction(MAYBE_MOVE_BY, (tile: Tile) => tile.id);
 
 export const CREATE_CITY = 'CREATE_CITY';
 export const createCity = createAction(CREATE_CITY);

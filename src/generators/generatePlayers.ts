@@ -2,6 +2,7 @@ import { Tile, Player } from '../AppState';
 import { PLAYERS_COUNT } from '../constants';
 import { getSurroundingTileIds } from '../utils';
 import * as intersection from 'lodash/intersection';
+import { v4 } from 'node-uuid';
 
 interface PlayerGeneratorProps {
     allTiles: Tile[];
@@ -35,14 +36,14 @@ export function generatePlayers({ allTiles }: PlayerGeneratorProps) {
             units: [({
                 name: 'settler',
                 tileId: firstTile.id,
-                id: Math.random(),
+                id: v4(),
                 ownerId: id,
                 movement: 2,
                 movementLeft: 2,
             }), ({
                 name: 'warrior',
                 tileId: secondTile.id,
-                id: Math.random(),
+                id: v4(),
                 ownerId: id,
                 movement: 3,
                 movementLeft: 3,

@@ -7,17 +7,13 @@ import './top-menu.scss';
 
 interface TopMenuProps {
     turn: number;
-    currentPlayerIndex: number;
-    players: Player[];
+    currentPlayer?: Player;
     dispatch: Function;
 }
 
-declare const localforage: LocalForage;
+declare const localforage: any;
 
-const _TopMenu = ({ turn, players, currentPlayerIndex }: TopMenuProps) => {
-
-    const currentPlayer = players[currentPlayerIndex];
-
+const _TopMenu = ({ turn, currentPlayer }: TopMenuProps) => {
     if (!currentPlayer)
         return null;
 
@@ -38,10 +34,9 @@ const _TopMenu = ({ turn, players, currentPlayerIndex }: TopMenuProps) => {
 
 export const TopMenu = connect(
     (state: AppState) => ({
-        currentPlayerIndex: state.currentPlayerIndex,
-        players: state.players,
+        currentPlayer: state.players[state.currentPlayerIndex],
         turn: state.turn,
     }),
     (dispatch: Function) => ({ dispatch })
-)(_TopMenu);
+)(_TopMenu as () => JSX.Element);
 
