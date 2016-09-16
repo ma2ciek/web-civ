@@ -15,7 +15,7 @@ export const MAP_WIDTH = 30;
 export const MAP_HEIGHT = 30;
 
 export const TILE_WIDTH = 300;
-export const TILE_HEIGH = 300 * Math.sqrt(3) / 2;
+export const TILE_HEIGHT = 300 * Math.sqrt(3) / 2;
 
 export const tileTypes: { [type: string]: { chance: number, moveCost: number } } = {
     grass: { chance: 5, moveCost: 1 },

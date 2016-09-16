@@ -1,6 +1,6 @@
 import { Position, AppState } from '../AppState';
 import { Action } from 'redux-actions';
-import { merge } from '../utils';
+import { merge, getTileIndexFromCameraPoint } from '../utils';
 
 export function zoomMap(state: AppState, action: Action<number>) {
     const zoom = (1 + action.payload * 0.03);
@@ -20,5 +20,12 @@ export function moveCamera(state: AppState, action: Action<{}>) {
             left: state.camera.left + (action.payload as Position).left,
             top: state.camera.top + (action.payload as Position).top,
         }),
+    });
+}
+
+
+export function hoverTile(state: AppState, action: Action<number>) {
+    return merge(state, {
+        hoveredTileIndex: action.payload,
     });
 }

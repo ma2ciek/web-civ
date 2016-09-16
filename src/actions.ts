@@ -36,3 +36,6 @@ export const zoomMap = createAction(ZOOM_MAP, (delta: number) => delta);
 
 export const NEXT_SELECTION = 'NEXT_SELECTION';
 export const nextSelection = createAction(NEXT_SELECTION);
+
+export const HOVER_TILE = 'HOVER_TILE';
+export const hoverTile = createAction<number>(HOVER_TILE);

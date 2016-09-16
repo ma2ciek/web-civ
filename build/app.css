@@ -13,6 +13,29 @@
     fill: white;
     height: 20px;
     padding: 5px; }
+.fade-enter {
+  opacity: 0.01; }
+  .fade-enter.fade-enter-active {
+    opacity: 1;
+    transition: opacity 200ms ease-in; }
+
+.fade-leave {
+  opacity: 1; }
+  .fade-leave.fade-leave-active {
+    opacity: 0.01;
+    transition: opacity 300ms ease-in; }
+.tooltip {
+  color: #fff;
+  padding: 40px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 20px;
+  font-size: 200%;
+  overflow-y: auto; }
+  .tooltip h1 {
+    color: #fff;
+    font-size: 49px;
+    margin: 0 0 20px;
+    text-align: center; }
 .map {
   width: 100%;
   height: 100%; }
@@ -24,14 +47,16 @@
       stroke: gold; }
   .map g.unit {
     overflow: visible;
-    cursor: pointer;
     transition: all 0.5s ease; }
     .map g.unit:hover polygon {
       stroke-width: 5px;
       stroke: #09f; }
     .map g.unit.selected-unit polygon {
       stroke-width: 10px;
-      stroke: gold; }
+      stroke: gold;
+      cursor: pointer; }
+    .map g.unit.melee-attack {
+      cursor: url("http://localhost:4444/images/cursor_attack.png"), crosshair; }
   .map g.tile polygon {
     stroke-width: 1px;
     stroke: #555; }

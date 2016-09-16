@@ -4,7 +4,7 @@ import { createPlayers, nextTurn } from './player';
 import { generateTiles } from '../generators';
 import { handleActions } from 'redux-actions';
 import { maybeMoveBy, createCity, meleeAttack, distanceAttack } from './unit';
-import { moveCamera, zoomMap } from './camera';
+import { moveCamera, zoomMap, hoverTile } from './camera';
 import { selectUnit, deselect, selectTown, nextSelection } from './selection';
 
 export const initialState: AppState = {
@@ -18,6 +18,7 @@ export const initialState: AppState = {
         zoom: 0.3,
     },
     selection: null,
+    hoveredTileIndex: 0,
 };
 
 export default handleActions<AppState, {}>({
@@ -36,4 +37,5 @@ export default handleActions<AppState, {}>({
 
     [actions.ZOOM_MAP]: zoomMap,
     [actions.MOVE_CAMERA]: moveCamera,
+    [actions.HOVER_TILE]: hoverTile,
 }, initialState);

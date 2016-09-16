@@ -5,6 +5,7 @@ export interface AppState {
     currentPlayerIndex: number;
     camera: Camera;
     selection: Selection | null;
+    hoveredTileIndex: number;
 }
 
 export interface Selection {

@@ -1,4 +1,5 @@
 import { tileTypes } from '../constants';
+import { Position } from '../AppState';
 
 export function getRandomType() {
     const tileNames = Object.keys(tileTypes);
@@ -18,4 +19,12 @@ export function getRandomType() {
 
 export function merge<X extends Y, Y>(x: X, y: Y): X {
     return Object.assign({}, x, y);
+}
+
+export function createCssTransformMatrix(translation: Position, scale = 1) {
+    return `matrix(${scale},0,0,${scale},${translation.left},${translation.top})`;
+}
+
+export function toUpperCaseFirstLetter(name: string) {
+    return name[0].toUpperCase() + name.slice(1);
 }

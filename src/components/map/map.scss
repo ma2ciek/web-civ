@@ -15,8 +15,8 @@
 
     g.unit {
         overflow: visible;
-        cursor: pointer;        
         transition: all 0.5s ease;
+        
 
         &:hover polygon {
             stroke-width: 5px;
@@ -26,6 +26,11 @@
         &.selected-unit polygon {
             stroke-width: 10px;
             stroke: gold;
+            cursor: pointer;                 
+        }
+
+        &.melee-attack {
+          cursor: url('http://localhost:4444/images/cursor_attack.png'), crosshair;
         }
     }
 

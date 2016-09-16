@@ -17,7 +17,7 @@ class _AnimatedMap extends React.Component<AppProps, {}> {
 
     public render() {
         return (
-            <div className='map' ref={(map) => this.setControls(map) }>
+            <div className='map' ref={(map) => this.setControls(map)}>
                 <MapContent />
             </div>
         );
@@ -66,13 +66,12 @@ class _AnimatedMap extends React.Component<AppProps, {}> {
         });
 
         map.addEventListener('mousemove', (e: MouseEvent) => {
-            if (!this.mouseDown)
-                return;
-
-            dispatch(moveCamera({
-                left: this.mouseX - e.pageX,
-                top: this.mouseY - e.pageY,
-            }));
+            if (this.mouseDown) {
+                dispatch(moveCamera({
+                    left: this.mouseX - e.pageX,
+                    top: this.mouseY - e.pageY,
+                }));
+            } 
 
             this.mouseX = e.pageX;
             this.mouseY = e.pageY;

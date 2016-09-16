@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { AppState, Player, Camera } from '../../AppState';
-import { TILE_WIDTH, TILE_HEIGH } from '../../constants';
+import { TILE_WIDTH, TILE_HEIGHT } from '../../constants';
 import { Patterns } from './Patterns';
 import { Units } from './Units';
 import { Towns } from './Towns';
 import { Tiles } from './Tiles';
 import { SelectedUnitMovement } from './SelectedUnitMovement';
+import { Tooltip } from './Tooltip';
 
 interface MapContentProps {
     camera: Camera;
@@ -17,7 +18,7 @@ function _MapContent({ camera, currentPlayer }: MapContentProps) {
     const transform = (
         'translate(' +
         (-camera.left + window.innerWidth / 2 - TILE_WIDTH * camera.zoom / 2) + ' ' +
-        (-camera.top + window.innerHeight / 2 - TILE_HEIGH * camera.zoom / 2) + ')'
+        (-camera.top + window.innerHeight / 2 - TILE_HEIGHT * camera.zoom / 2) + ')'
     );
 
     if (!currentPlayer)
@@ -32,6 +33,7 @@ function _MapContent({ camera, currentPlayer }: MapContentProps) {
                 <Towns />
                 <Units />
                 <SelectedUnitMovement />
+                <Tooltip />
             </g>
         </svg>
     );

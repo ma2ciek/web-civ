@@ -4,16 +4,19 @@ TODO
 
 ## Features:
 
-- [X] Path finding, 'can-move' icons
+- [X] Path finding,
 - [X] Simple fog of war
-- [X] Autosave of entire application state
-- [X] 3 tiles (water, grass, forest) with specific chance of generation and movement cost
+- [X] Autosave of entire application state in indexedDB
 - [X] Smooth map dragging and zooming 
+- [x] Cursors: (default, select, melee-attack)
+- [X] 3 tiles (water, grass, forest) with specific movement cost and chance of being generated
+- [X] Unit melee attack
 
 
-## Todo:
+## Todo: 
 
-- [ ] Unit health and combat options
+- [ ] Tooltips on the map
+- [ ] Distance attack unit
 - [ ] Town view - buildings, income, etc.
 - [ ] Audio and sounds
 - [ ] Animations of unit movement and other actions
@@ -23,12 +26,10 @@ TODO
 
 ## Development:
 ```bash
-npm install -g webpack typings 
-
+npm install -g webpack 
 npm install
-typings install
 
-webpack
+webpack --watch
 ```
 
 ## Testing

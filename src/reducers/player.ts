@@ -7,11 +7,11 @@ export function updatePlayerSeenTiles(player: Player) {
     return merge(player, {
         seenTileIds: uniq([
             ...player.seenTileIds,
-            ...getSurroundingTileIds([
+            ...getSurroundingTileIds(getSurroundingTileIds([
                 ...player.units.map(u => u.tileId),
                 ...player.towns.map(t => t.tileId),
-            ]),
-        ]).sort(),
+            ])),
+        ]),
     });
 }
 

@@ -64,31 +64,43 @@ export const distanceAttack = (state: AppState, action: Action<Unit>) => {
 };
 
 export const meleeAttack = (state: AppState, action: Action<Unit>) => {
-    const currentUnit = getSelectedUnit(state);
-    const enemy = action.payload;
+    const enemy = <Unit>action.payload;
+    const selectedtUnit = <Unit>getSelectedUnit(state);
 
-    if (!enemy || !currentUnit || !currentUnit.meleeDamage || currentUnit.movementLeft < 1)
+    if (!isMeleeAttackAvailableFactory(state)(enemy))
         return state;
 
-    const ids = getSurroundingTileIds([currentUnit.tileId]);
+    const ids = getSurroundingTileIds([selectedtUnit.tileId]);
     if (ids.indexOf(enemy.tileId) === -1)
         return state;
 
-    const hpLeft = enemy.hpLeft - currentUnit.meleeDamage;
+    const hpLeft = enemy.hpLeft - selectedtUnit.meleeDamage;
 
     if (hpLeft <= 0) {
         state = removeUnitFromState(state, enemy);
-        state = updateUnit(state, currentUnit, {
+        state = updateUnit(state, selectedtUnit, {
             tileId: enemy.tileId,
             movementLeft: 0,
         });
     } else {
         state = updateUnit(state, enemy, { hpLeft });
-        state = updateUnit(state, currentUnit, { movementLeft: 0 });
+        state = updateUnit(state, selectedtUnit, { movementLeft: 0 });
     }
 
     return state;
 }
+
+export function isMeleeAttackAvailableFactory(state: AppState) {
+    const currentUnit = getSelectedUnit(state);
+
+    return (enemy: Unit | null | undefined) => (
+        !!enemy &&
+        !!currentUnit &&
+        !!currentUnit.meleeDamage &&
+        currentUnit.movementLeft >= 1 &&
+        getSurroundingTileIds([currentUnit.tileId]).indexOf(enemy.tileId) !== -1
+    );
+};
 
 function updateSelectedUnit(state: AppState, fn: (unit: Unit) => {}) {
     return updateCurrentPlayer(state, p => ({

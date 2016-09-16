@@ -50,7 +50,7 @@
 	var ReactDOM = __webpack_require__(2);
 	var react_redux_1 = __webpack_require__(3);
 	var App_1 = __webpack_require__(28);
-	var configureStore_1 = __webpack_require__(211);
+	var configureStore_1 = __webpack_require__(248);
 	__webpack_require__(260);
 	configureStore_1.configureStore().then(function (store) {
 	    ReactDOM.render(React.createElement(react_redux_1.Provider, { store: store }, React.createElement(App_1.default, null)), document.getElementById('root'));
@@ -1875,8 +1875,8 @@
 	var react_redux_1 = __webpack_require__(3);
 	var TopMenu_1 = __webpack_require__(29);
 	var AnimatedMap_1 = __webpack_require__(35);
-	var UnitMenu_1 = __webpack_require__(204);
-	var BottomMenu_1 = __webpack_require__(208);
+	var UnitMenu_1 = __webpack_require__(241);
+	var BottomMenu_1 = __webpack_require__(245);
 	
 	var App = function (_React$Component) {
 	    _inherits(App, _React$Component);
@@ -1947,7 +1947,7 @@
 	exports.MAP_WIDTH = 30;
 	exports.MAP_HEIGHT = 30;
 	exports.TILE_WIDTH = 300;
-	exports.TILE_HEIGH = 300 * Math.sqrt(3) / 2;
+	exports.TILE_HEIGHT = 300 * Math.sqrt(3) / 2;
 	exports.tileTypes = {
 	    grass: { chance: 5, moveCost: 1 },
 	    forest: { chance: 2, moveCost: 1.5 },
@@ -1982,7 +1982,7 @@
 	var react_redux_1 = __webpack_require__(3);
 	var actions_1 = __webpack_require__(36);
 	var MapContent_1 = __webpack_require__(186);
-	__webpack_require__(202);
+	__webpack_require__(239);
 	
 	var _AnimatedMap = function (_React$Component) {
 	    _inherits(_AnimatedMap, _React$Component);
@@ -2046,11 +2046,12 @@
 	                map.style.cursor = 'default';
 	            });
 	            map.addEventListener('mousemove', function (e) {
-	                if (!_this3.mouseDown) return;
-	                dispatch(actions_1.moveCamera({
-	                    left: _this3.mouseX - e.pageX,
-	                    top: _this3.mouseY - e.pageY
-	                }));
+	                if (_this3.mouseDown) {
+	                    dispatch(actions_1.moveCamera({
+	                        left: _this3.mouseX - e.pageX,
+	                        top: _this3.mouseY - e.pageY
+	                    }));
+	                }
 	                _this3.mouseX = e.pageX;
 	                _this3.mouseY = e.pageY;
 	            });
@@ -2110,6 +2111,8 @@
 	});
 	exports.NEXT_SELECTION = 'NEXT_SELECTION';
 	exports.nextSelection = redux_actions_1.createAction(exports.NEXT_SELECTION);
+	exports.HOVER_TILE = 'HOVER_TILE';
+	exports.hoverTile = redux_actions_1.createAction(exports.HOVER_TILE);
 
 /***/ },
 /* 37 */
@@ -7300,16 +7303,17 @@
 	var constants_1 = __webpack_require__(30);
 	var Patterns_1 = __webpack_require__(187);
 	var Units_1 = __webpack_require__(188);
-	var Towns_1 = __webpack_require__(196);
-	var Tiles_1 = __webpack_require__(199);
-	var SelectedUnitMovement_1 = __webpack_require__(201);
+	var Towns_1 = __webpack_require__(234);
+	var Tiles_1 = __webpack_require__(236);
+	var SelectedUnitMovement_1 = __webpack_require__(238);
+	var Tooltip_1 = __webpack_require__(262);
 	function _MapContent(_ref) {
 	    var camera = _ref.camera;
 	    var currentPlayer = _ref.currentPlayer;
 	
-	    var transform = 'translate(' + (-camera.left + window.innerWidth / 2 - constants_1.TILE_WIDTH * camera.zoom / 2) + ' ' + (-camera.top + window.innerHeight / 2 - constants_1.TILE_HEIGH * camera.zoom / 2) + ')';
+	    var transform = 'translate(' + (-camera.left + window.innerWidth / 2 - constants_1.TILE_WIDTH * camera.zoom / 2) + ' ' + (-camera.top + window.innerHeight / 2 - constants_1.TILE_HEIGHT * camera.zoom / 2) + ')';
 	    if (!currentPlayer) return React.createElement("svg", null);
-	    return React.createElement("svg", { width: '100%', height: '100vh' }, React.createElement(Patterns_1.Patterns, null), React.createElement("g", { transform: transform }, React.createElement(Tiles_1.Tiles, null), React.createElement(Towns_1.Towns, null), React.createElement(Units_1.Units, null), React.createElement(SelectedUnitMovement_1.SelectedUnitMovement, null)));
+	    return React.createElement("svg", { width: '100%', height: '100vh' }, React.createElement(Patterns_1.Patterns, null), React.createElement("g", { transform: transform }, React.createElement(Tiles_1.Tiles, null), React.createElement(Towns_1.Towns, null), React.createElement(Units_1.Units, null), React.createElement(SelectedUnitMovement_1.SelectedUnitMovement, null), React.createElement(Tooltip_1.Tooltip, null)));
 	}
 	;
 	exports.MapContent = react_redux_1.connect(function (state) {
@@ -7348,11 +7352,13 @@
 	var react_redux_1 = __webpack_require__(3);
 	var actions_1 = __webpack_require__(36);
 	var UnitComponent_1 = __webpack_require__(189);
+	var unit_1 = __webpack_require__(197);
 	function _Units(_ref) {
 	    var players = _ref.players;
 	    var currentPlayerIndex = _ref.currentPlayerIndex;
 	    var zoom = _ref.zoom;
 	    var selection = _ref.selection;
+	    var isMeleeAttackAvailable = _ref.isMeleeAttackAvailable;
 	    var dispatch = _ref.dispatch;
 	
 	    var currentPlayer = players[currentPlayerIndex];
@@ -7360,8 +7366,9 @@
 	        return player.units.filter(function (unit) {
 	            return currentPlayer.seenTileIds.indexOf(unit.tileId) > -1;
 	        }).map(function (unit) {
-	            return React.createElement(UnitComponent_1.UnitComponent, { unit: unit, scale: zoom, key: unit.id, selected: player.id === currentPlayer.id && !!selection && selection.id === unit.id, onContextMenu: function onContextMenu() {
-	                    return unit.ownerId !== currentPlayer.id && dispatch(actions_1.meleeAttack(unit));
+	            var meleeAttackAvailable = isMeleeAttackAvailable(unit);
+	            return React.createElement(UnitComponent_1.UnitComponent, { unit: unit, scale: zoom, key: unit.id, selected: player.id === currentPlayer.id && !!selection && selection.id === unit.id, meleeAttackAvailable: meleeAttackAvailable, onContextMenu: function onContextMenu() {
+	                    return meleeAttackAvailable && dispatch(actions_1.meleeAttack(unit));
 	                }, onClick: function onClick() {
 	                    return unit.ownerId === currentPlayer.id && dispatch(actions_1.selectUnit(unit));
 	                } });
@@ -7374,7 +7381,8 @@
 	        currentPlayerIndex: state.currentPlayerIndex,
 	        players: state.players,
 	        selection: state.selection,
-	        zoom: state.camera.zoom
+	        zoom: state.camera.zoom,
+	        isMeleeAttackAvailable: unit_1.isMeleeAttackAvailableFactory(state)
 	    };
 	}, function (dispatch) {
 	    return { dispatch: dispatch };
@@ -7390,12 +7398,14 @@
 	var utils_1 = __webpack_require__(190);
 	var Hex_1 = __webpack_require__(195);
 	var constants_1 = __webpack_require__(30);
+	var classnames = __webpack_require__(196);
 	function UnitComponent(_ref) {
 	    var unit = _ref.unit;
 	    var _onContextMenu = _ref.onContextMenu;
 	    var _onClick = _ref.onClick;
 	    var selected = _ref.selected;
 	    var scale = _ref.scale;
+	    var meleeAttackAvailable = _ref.meleeAttackAvailable;
 	
 	    var _utils_1$getTileCamer = utils_1.getTileCameraPosition(unit.tileId, scale);
 	
@@ -7407,7 +7417,10 @@
 	            return _onContextMenu();
 	        }, onClick: function onClick() {
 	            return _onClick();
-	        }, className: 'unit' + (selected ? ' selected-unit' : ''), transform: 'translate(' + left + ', ' + top + ')' }, React.createElement(Hex_1.Hex, { scale: scale, pattern: unit.name }), React.createElement("circle", { r: 20 * scale, cx: constants_1.TILE_WIDTH * scale * 4 / 5, cy: constants_1.TILE_WIDTH * scale * 4 / 5, stroke: 'black', strokeWidth: 3 * scale, fill: color }));
+	        }, className: classnames('unit', {
+	            'selected-unit': selected,
+	            'melee-attack': meleeAttackAvailable
+	        }), transform: 'translate(' + left + ', ' + top + ')' }, React.createElement(Hex_1.Hex, { scale: scale, pattern: unit.name }), React.createElement("circle", { r: 20 * scale, cx: constants_1.TILE_WIDTH * scale * 4 / 5, cy: constants_1.TILE_WIDTH * scale * 4 / 5, stroke: 'black', strokeWidth: 3 * scale, fill: color }));
 	}
 	exports.UnitComponent = UnitComponent;
 
@@ -7466,12 +7479,15 @@
 	            id: units[0].id
 	        },
 	        tilePosition: tile_utils_1.getTileCameraPosition(units[0].tileId, zoom)
-	    } : {
+	    } : towns.length > 0 ? {
 	        selection: {
 	            type: 'town',
 	            id: towns[0].id
 	        },
 	        tilePosition: tile_utils_1.getTileCameraPosition(towns[0].tileId, zoom)
+	    } : {
+	        selection: null,
+	        tilePosition: null
 	    };
 	}
 	exports.getSelected = getSelected;
@@ -7512,7 +7528,7 @@
 	var lodash_1 = __webpack_require__(193);
 	function getTileCameraPosition(tileId, zoom) {
 	    var tileWidth = zoom * constants_1.TILE_WIDTH;
-	    var tileHeight = zoom * constants_1.TILE_HEIGH;
+	    var tileHeight = zoom * constants_1.TILE_HEIGHT;
 	    var position = getTilePositionById(tileId);
 	    return position.left % 2 === 0 ? {
 	        left: position.left * tileWidth * 3 / 4,
@@ -7525,7 +7541,7 @@
 	exports.getTileCameraPosition = getTileCameraPosition;
 	function isTileVisible(tile, camera) {
 	    var tileWidth = camera.zoom * constants_1.TILE_WIDTH;
-	    var tileHeight = camera.zoom * constants_1.TILE_HEIGH;
+	    var tileHeight = camera.zoom * constants_1.TILE_HEIGHT;
 	    var position = getTileCameraPosition(tile.id, camera.zoom);
 	    var left = position.left - camera.left + window.innerWidth / 2 - tileWidth / 2;
 	    var top = position.top - camera.top + window.innerHeight / 2 - tileHeight / 2;
@@ -7572,9 +7588,9 @@
 	        }
 	    }
 	
-	    return surroundingTileIds.filter(function (x) {
-	        return !!x;
-	    });
+	    return lodash_1.uniq(surroundingTileIds.filter(function (x) {
+	        return x >= 0 && x < constants_1.MAP_WIDTH * constants_1.MAP_HEIGHT;
+	    }));
 	}
 	exports.getSurroundingTileIds = getSurroundingTileIds;
 	function getAvailableTilesForUnit(unit, allTiles) {
@@ -7634,6 +7650,14 @@
 	    };
 	}
 	exports.getTilePositionById = getTilePositionById;
+	function getTileIndexFromCameraPoint(camera) {
+	    var tileWidth = camera.zoom * constants_1.TILE_WIDTH;
+	    var tileHeight = camera.zoom * constants_1.TILE_HEIGHT;
+	    var fromLeft = camera.left / tileWidth * 3 / 4 | 0;
+	    var fromTop = camera.top / tileHeight | 0;
+	    return fromLeft * constants_1.MAP_HEIGHT + fromTop;
+	}
+	exports.getTileIndexFromCameraPoint = getTileIndexFromCameraPoint;
 
 /***/ },
 /* 193 */
@@ -24423,6 +24447,16 @@
 	    return Object.assign({}, x, y);
 	}
 	exports.merge = merge;
+	function createCssTransformMatrix(translation) {
+	    var scale = arguments.length <= 1 || arguments[1] === undefined ? 1 : arguments[1];
+	
+	    return 'matrix(' + scale + ',0,0,' + scale + ',' + translation.left + ',' + translation.top + ')';
+	}
+	exports.createCssTransformMatrix = createCssTransformMatrix;
+	function toUpperCaseFirstLetter(name) {
+	    return name[0].toUpperCase() + name.slice(1);
+	}
+	exports.toUpperCaseFirstLetter = toUpperCaseFirstLetter;
 
 /***/ },
 /* 195 */
@@ -24441,80 +24475,6 @@
 
 /***/ },
 /* 196 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	var React = __webpack_require__(1);
-	var react_redux_1 = __webpack_require__(3);
-	var actions_1 = __webpack_require__(36);
-	var TownComponent_1 = __webpack_require__(197);
-	function _Towns(_ref) {
-	    var players = _ref.players;
-	    var currentPlayer = _ref.currentPlayer;
-	    var zoom = _ref.zoom;
-	    var selected = _ref.selected;
-	    var dispatch = _ref.dispatch;
-	
-	    var towns = players.map(function (player) {
-	        return player.towns.filter(function (town) {
-	            return currentPlayer.seenTileIds.indexOf(town.tileId) > -1;
-	        }).map(function (town) {
-	            return React.createElement(TownComponent_1.TownComponent, { town: town, scale: zoom, key: town.id, selected: player.id === currentPlayer.id && selected.id === town.id, onContextMenu: function onContextMenu() {}, onClick: function onClick() {
-	                    if (town.ownerId === currentPlayer.id) {
-	                        dispatch(actions_1.selectTown(town));
-	                    }
-	                } });
-	        });
-	    });
-	    return React.createElement("g", { className: 'towns' }, towns);
-	}
-	exports._Towns = _Towns;
-	exports.Towns = react_redux_1.connect(function (state) {
-	    return {
-	        currentPlayer: state.players[state.currentPlayerIndex],
-	        players: state.players,
-	        selected: state.selection,
-	        zoom: state.camera.zoom
-	    };
-	})(_Towns);
-
-/***/ },
-/* 197 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	var React = __webpack_require__(1);
-	var utils_1 = __webpack_require__(190);
-	var Hex_1 = __webpack_require__(195);
-	var constants_1 = __webpack_require__(30);
-	var classnames = __webpack_require__(198);
-	function TownComponent(_ref) {
-	    var town = _ref.town;
-	    var _onContextMenu = _ref.onContextMenu;
-	    var _onClick = _ref.onClick;
-	    var selected = _ref.selected;
-	    var scale = _ref.scale;
-	
-	    var _utils_1$getTileCamer = utils_1.getTileCameraPosition(town.tileId, scale);
-	
-	    var left = _utils_1$getTileCamer.left;
-	    var top = _utils_1$getTileCamer.top;
-	
-	    return React.createElement("g", { onContextMenu: function onContextMenu() {
-	            return _onContextMenu();
-	        }, onClick: function onClick() {
-	            return _onClick();
-	        }, className: classnames('town', {
-	            'selected': selected
-	        }), transform: 'translate(' + left + ', ' + top + ')' }, React.createElement(Hex_1.Hex, { scale: scale, pattern: 'middle-age-city' }), React.createElement("text", { fontSize: 40 * scale, x: constants_1.TILE_WIDTH * scale / 2, textAnchor: 'middle', fill: 'white' }, town.name));
-	}
-	exports.TownComponent = TownComponent;
-	;
-
-/***/ },
-/* 198 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -24568,316 +24528,7 @@
 
 
 /***/ },
-/* 199 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	var React = __webpack_require__(1);
-	var react_redux_1 = __webpack_require__(3);
-	var actions_1 = __webpack_require__(36);
-	var TileComponent_1 = __webpack_require__(200);
-	var utils_1 = __webpack_require__(190);
-	function _Tiles(_ref) {
-	    var players = _ref.players;
-	    var currentPlayerIndex = _ref.currentPlayerIndex;
-	    var camera = _ref.camera;
-	    var tiles = _ref.tiles;
-	    var dispatch = _ref.dispatch;
-	
-	    var currentPlayer = players[currentPlayerIndex];
-	    var visibleTiles = currentPlayer.seenTileIds.map(function (id) {
-	        return tiles[id];
-	    }).filter(function (tile) {
-	        return utils_1.isTileVisible(tile, camera);
-	    }).map(function (tile) {
-	        return React.createElement(TileComponent_1.TileComponent, { tile: tile, key: tile.id, scale: camera.zoom, onContextMenu: function onContextMenu() {
-	                return dispatch(actions_1.maybeMoveCurrentUnit(tile));
-	            }, onClick: function onClick() {
-	                return dispatch(actions_1.deselect());
-	            } });
-	    });
-	    return React.createElement("g", { className: 'tiles' }, visibleTiles);
-	}
-	exports._Tiles = _Tiles;
-	exports.Tiles = react_redux_1.connect(function (state) {
-	    return {
-	        currentPlayerIndex: state.currentPlayerIndex,
-	        players: state.players,
-	        camera: state.camera,
-	        tiles: state.tiles
-	    };
-	})(_Tiles);
-
-/***/ },
-/* 200 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	var React = __webpack_require__(1);
-	var utils_1 = __webpack_require__(190);
-	var Hex_1 = __webpack_require__(195);
-	function TileComponent(_ref) {
-	    var tile = _ref.tile;
-	    var _onContextMenu = _ref.onContextMenu;
-	    var _onClick = _ref.onClick;
-	    var scale = _ref.scale;
-	
-	    var _utils_1$getTileCamer = utils_1.getTileCameraPosition(tile.id, scale);
-	
-	    var left = _utils_1$getTileCamer.left;
-	    var top = _utils_1$getTileCamer.top;
-	
-	    return React.createElement("g", { onContextMenu: function onContextMenu() {
-	            return _onContextMenu();
-	        }, onClick: function onClick() {
-	            return _onClick();
-	        }, className: 'tile', transform: 'translate(' + left + ', ' + top + ')' }, React.createElement(Hex_1.Hex, { scale: scale, pattern: tile.type }));
-	}
-	exports.TileComponent = TileComponent;
-	;
-
-/***/ },
-/* 201 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	var React = __webpack_require__(1);
-	var react_redux_1 = __webpack_require__(3);
-	var utils_1 = __webpack_require__(190);
-	var constants_1 = __webpack_require__(30);
-	function _SelectedUnitMovement(_ref) {
-	    var selection = _ref.selection;
-	    var activePlayer = _ref.activePlayer;
-	    var camera = _ref.camera;
-	    var tiles = _ref.tiles;
-	
-	    if (!selection || selection.type !== 'unit') return React.createElement("g", null);
-	    var activeUnit = activePlayer.units.filter(function (unit) {
-	        return unit.id === selection.id;
-	    })[0];
-	    var seenTiles = activePlayer.seenTileIds.map(function (id) {
-	        return tiles[id];
-	    });
-	    var availableTiles = utils_1.getAvailableTilesForUnit(activeUnit, seenTiles).filter(function (tile) {
-	        return utils_1.isTileVisible(tile, camera);
-	    });
-	    return React.createElement("g", null, availableTiles.map(function (tile) {
-	        var position = utils_1.getTileCameraPosition(tile.id, camera.zoom);
-	        return React.createElement("g", { transform: 'translate(' + position.left + ', ' + position.top + ')', key: tile.id }, React.createElement("circle", { className: 'move-marker', cx: constants_1.TILE_WIDTH * camera.zoom / 2, cy: constants_1.TILE_WIDTH * camera.zoom / 2, r: 30 * camera.zoom, stroke: 'green', strokeWidth: 10 * camera.zoom, fill: 'yellow', opacity: 0.6 }));
-	    }));
-	}
-	exports.SelectedUnitMovement = react_redux_1.connect(function (state) {
-	    return {
-	        activePlayer: state.players[state.currentPlayerIndex],
-	        selection: state.selection,
-	        camera: state.camera,
-	        tiles: state.tiles
-	    };
-	})(_SelectedUnitMovement);
-
-/***/ },
-/* 202 */
-/***/ function(module, exports) {
-
-	// removed by extract-text-webpack-plugin
-
-/***/ },
-/* 203 */,
-/* 204 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	var React = __webpack_require__(1);
-	var react_redux_1 = __webpack_require__(3);
-	var icons_1 = __webpack_require__(205);
-	var actions_1 = __webpack_require__(36);
-	var utils_1 = __webpack_require__(190);
-	__webpack_require__(206);
-	var SettlerOptions = function SettlerOptions(_ref) {
-	    var dispatch = _ref.dispatch;
-	
-	    return React.createElement("div", { className: 'settler-options' }, React.createElement("div", { className: 'option' }, React.createElement("a", { onClick: function onClick() {
-	            return dispatch(actions_1.createCity());
-	        } }, React.createElement(icons_1.IconHome, null))));
-	};
-	
-	var _UnitMenu = function (_React$Component) {
-	    _inherits(_UnitMenu, _React$Component);
-	
-	    function _UnitMenu() {
-	        _classCallCheck(this, _UnitMenu);
-	
-	        return _possibleConstructorReturn(this, (_UnitMenu.__proto__ || Object.getPrototypeOf(_UnitMenu)).apply(this, arguments));
-	    }
-	
-	    _createClass(_UnitMenu, [{
-	        key: 'render',
-	        value: function render() {
-	            var selectedUnit = this.props.selectedUnit;
-	
-	            if (!selectedUnit) return null;
-	            return React.createElement("div", { className: 'unit-side-menu' }, React.createElement("h2", null, selectedUnit.name.toUpperCase()), React.createElement("div", null, 'Movement: ' + selectedUnit.movementLeft + '/' + selectedUnit.movement), React.createElement("div", null, 'Hp: ' + selectedUnit.hpLeft + '/' + selectedUnit.hp), selectedUnit.name === 'warrior' && React.createElement("div", null, 'Melee dmg: ' + selectedUnit.meleeDamage), React.createElement("div", { className: 'unit-options' }, this.renderOptions()));
-	        }
-	    }, {
-	        key: 'renderOptions',
-	        value: function renderOptions() {
-	            var selectedUnit = this.props.selectedUnit;
-	
-	            switch (selectedUnit.name) {
-	                case 'settler':
-	                    return React.createElement(SettlerOptions, { dispatch: this.props.dispatch });
-	                default:
-	                    return null;
-	            }
-	        }
-	    }]);
-	
-	    return _UnitMenu;
-	}(React.Component);
-	
-	exports.UnitMenu = react_redux_1.connect(function (state) {
-	    return {
-	        selectedUnit: utils_1.getSelectedUnit(state)
-	    };
-	})(_UnitMenu);
-
-/***/ },
-/* 205 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	var React = __webpack_require__(1);
-	exports.IconReload = function () {
-	    return React.createElement("svg", { viewBox: '0 0 1000 1000' }, React.createElement("g", null, React.createElement("path", { d: 'M987.4,466.9l-54,95.1l-54.7,96.4h-0.1c-2.7,4.4-7.5,7.4-13.1,7.4c-5.6,0-10.6-3.1-13.3-7.7l0,0L797.8,562l-54.1-95.4c-1.5-2.4-2.4-5.3-2.4-8.3c0-8.7,6.9-15.7,15.5-15.7h70.8C800.8,284.2,665.2,163.8,502,163.8c-63.6,0-123,18.3-173.4,50c-6.8,4.9-15.1,7.9-24,7.9c-22.8,0-41.3-18.8-41.3-42c0-15.9,8.8-29.8,21.6-36.9C348,103,422.4,80,502.1,80C711,80,883.5,237.7,911.1,442.5h63.5c8.5,0,15.4,7,15.4,15.7C990,461.4,989,464.4,987.4,466.9z M243.2,491.3h-71.5c-0.1,2.9-0.1,5.7-0.1,8.7c0,185.7,147.9,336.2,330.4,336.2c74.4,0,143-25,198.3-67.3c0,0,0,0.1,0.1,0.1c7.4-7.1,17.3-11.4,28.2-11.4c22.8,0,41.3,18.8,41.3,42c0,12.4-5.3,23.7-13.8,31.4c0,0,0,0,0,0.1c-0.3,0.2-0.6,0.5-0.9,0.7c-1,0.8-2.1,1.6-3.1,2.4c-69.4,53.8-156,85.8-250,85.8c-228,0-412.8-188.1-412.8-420c0-2.9,0-5.8,0.1-8.8h-64c-8.5,0-15.4-7-15.4-15.7c0-3.1,0.9-6,2.4-8.4l54.2-95.4l54.5-96h0c2.7-4.6,7.6-7.7,13.2-7.7c5.5,0,10.4,2.9,13.1,7.4h0.1l54.7,96.3l54,95.2c1.6,2.5,2.5,5.5,2.5,8.7C258.7,484.3,251.8,491.3,243.2,491.3z' })));
-	};
-	exports.IconHome = function () {
-	    return React.createElement("svg", { viewBox: '0 -256 1792 1792' }, React.createElement("g", { transform: 'matrix(1,0,0,-1,68.338983,1285.4237)' }, React.createElement("path", { d: 'M 1408,544 V 64 Q 1408,38 1389,19 1370,0 1344,0 H 960 V 384 H 704 V 0 H 320 q -26,0 -45,19 -19,19 -19,45 v 480 q 0,1 0.5,3 0.5,2 0.5,3 l 575,474 575,-474 q 1,-2 1,-6 z m 223,69 -62,-74 q -8,-9 -21,-11 h -3 q -13,0 -21,7 L 832,1112 140,535 q -12,-8 -24,-7 -13,2 -21,11 l -62,74 q -8,10 -7,23.5 1,13.5 11,21.5 l 719,599 q 32,26 76,26 44,0 76,-26 l 244,-204 v 195 q 0,14 9,23 9,9 23,9 h 192 q 14,0 23,-9 9,-9 9,-23 V 840 l 219,-182 q 10,-8 11,-21.5 1,-13.5 -7,-23.5 z' })));
-	};
-	exports.IconNext = function () {
-	    return React.createElement("svg", { viewBox: "0 0 477.175 477.175" }, React.createElement("g", null, React.createElement("path", { d: "M360.731,229.075l-225.1-225.1c-5.3-5.3-13.8-5.3-19.1,0s-5.3,13.8,0,19.1l215.5,215.5l-215.5,215.5 c-5.3, 5.3-5.3, 13.8, 0, 19.1c2.6, 2.6, 6.1, 4, 9.5, 4c3.4, 0, 6.9-1.3, 9.5-4l225.1-225.1C365.931, 242.875, 365.931, 234.275, 360.731, 229.075z" })));
-	};
-
-/***/ },
-/* 206 */
-/***/ function(module, exports) {
-
-	// removed by extract-text-webpack-plugin
-
-/***/ },
-/* 207 */,
-/* 208 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	var React = __webpack_require__(1);
-	var react_redux_1 = __webpack_require__(3);
-	var actions_1 = __webpack_require__(36);
-	var icons_1 = __webpack_require__(205);
-	var utils_1 = __webpack_require__(190);
-	__webpack_require__(209);
-	var _BottomMenu = function _BottomMenu(_ref) {
-	    var nextSelectionExist = _ref.nextSelectionExist;
-	    var dispatch = _ref.dispatch;
-	
-	    return React.createElement("div", { className: 'bottom-menu' }, nextSelectionExist && React.createElement("div", { className: 'next', onClick: function onClick() {
-	            return dispatch(actions_1.nextSelection());
-	        } }, React.createElement(icons_1.IconNext, null)), React.createElement("div", { className: 'next', onClick: function onClick() {
-	            return dispatch(actions_1.nextTurn());
-	        } }, React.createElement(icons_1.IconReload, null)));
-	};
-	exports.BottomMenu = react_redux_1.connect(function (state) {
-	    return {
-	        nextSelectionExist: !!utils_1.getNextSelection(state)
-	    };
-	}, function (dispatch) {
-	    return { dispatch: dispatch };
-	})(_BottomMenu);
-
-/***/ },
-/* 209 */
-/***/ function(module, exports) {
-
-	// removed by extract-text-webpack-plugin
-
-/***/ },
-/* 210 */,
-/* 211 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	var constants_1 = __webpack_require__(30);
-	var redux_1 = __webpack_require__(11);
-	var redux_2 = __webpack_require__(11);
-	var reducer_1 = __webpack_require__(212);
-	var actions_1 = __webpack_require__(36);
-	var promise = __webpack_require__(252);
-	var createLogger = __webpack_require__(259);
-	function configureStore() {
-	    return localforage.getItem(constants_1.STORAGE_KEY).then(function (data) {
-	        var middlewares = [promise, createLogger()];
-	        var store = data ? redux_2.createStore(reducer_1.default, data, redux_1.applyMiddleware.apply(redux_1, middlewares)) : redux_2.createStore(reducer_1.default, redux_1.applyMiddleware.apply(redux_1, middlewares));
-	        if (!data) {
-	            store.dispatch(actions_1.generatePlayers());
-	        }
-	        window.getState = store.getState;
-	        store.subscribe(function () {
-	            var state = store.getState();
-	            localforage.setItem(constants_1.STORAGE_KEY, state);
-	        });
-	        return store;
-	    });
-	}
-	exports.configureStore = configureStore;
-
-/***/ },
-/* 212 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	var _redux_actions_1$hand;
-	
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-	
-	var actions = __webpack_require__(36);
-	var player_1 = __webpack_require__(213);
-	var generators_1 = __webpack_require__(214);
-	var redux_actions_1 = __webpack_require__(37);
-	var unit_1 = __webpack_require__(249);
-	var camera_1 = __webpack_require__(250);
-	var selection_1 = __webpack_require__(251);
-	exports.initialState = {
-	    tiles: generators_1.generateTiles(),
-	    players: [],
-	    turn: 0,
-	    currentPlayerIndex: 0,
-	    camera: {
-	        left: 0,
-	        top: 0,
-	        zoom: 0.3
-	    },
-	    selection: null
-	};
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = redux_actions_1.handleActions((_redux_actions_1$hand = {}, _defineProperty(_redux_actions_1$hand, actions.GENERATE_PLAYERS, player_1.createPlayers), _defineProperty(_redux_actions_1$hand, actions.NEXT_TURN, player_1.nextTurn), _defineProperty(_redux_actions_1$hand, actions.DESELECT, selection_1.deselect), _defineProperty(_redux_actions_1$hand, actions.SELECT_UNIT, selection_1.selectUnit), _defineProperty(_redux_actions_1$hand, actions.SELECT_TOWN, selection_1.selectTown), _defineProperty(_redux_actions_1$hand, actions.NEXT_SELECTION, selection_1.nextSelection), _defineProperty(_redux_actions_1$hand, actions.MAYBE_MOVE_BY, unit_1.maybeMoveBy), _defineProperty(_redux_actions_1$hand, actions.CREATE_CITY, unit_1.createCity), _defineProperty(_redux_actions_1$hand, actions.DISTANCE_ATTACK, unit_1.distanceAttack), _defineProperty(_redux_actions_1$hand, actions.MELEE_ATTACK, unit_1.meleeAttack), _defineProperty(_redux_actions_1$hand, actions.ZOOM_MAP, camera_1.zoomMap), _defineProperty(_redux_actions_1$hand, actions.MOVE_CAMERA, camera_1.moveCamera), _redux_actions_1$hand), exports.initialState);
-
-/***/ },
-/* 213 */
+/* 197 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -24885,64 +24536,123 @@
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 	
 	var utils_1 = __webpack_require__(190);
-	var lodash_1 = __webpack_require__(193);
-	var generators_1 = __webpack_require__(214);
-	function updatePlayerSeenTiles(player) {
-	    return utils_1.merge(player, {
-	        seenTileIds: lodash_1.uniq([].concat(_toConsumableArray(player.seenTileIds), _toConsumableArray(utils_1.getSurroundingTileIds([].concat(_toConsumableArray(player.units.map(function (u) {
-	            return u.tileId;
-	        })), _toConsumableArray(player.towns.map(function (t) {
-	            return t.tileId;
-	        }))))))).sort()
+	var generators_1 = __webpack_require__(198);
+	var player_1 = __webpack_require__(233);
+	exports.maybeMoveBy = function (state, action) {
+	    if (state.selection && state.selection.type !== 'unit') return state;
+	    var currentPlayer = state.players[state.currentPlayerIndex];
+	    var activeUnit = utils_1.getSelectedUnit(state);
+	    if (!activeUnit) return state;
+	    var movementAvailableMap = utils_1.getAvailableMoves(state.tiles[activeUnit.tileId], currentPlayer.seenTileIds.map(function (id) {
+	        return state.tiles[id];
+	    }), activeUnit.movementLeft);
+	    if (movementAvailableMap.length === 0) return state;
+	    var result = movementAvailableMap.filter(function (map) {
+	        return map.tile === state.tiles[action.payload];
 	    });
-	}
-	exports.updatePlayerSeenTiles = updatePlayerSeenTiles;
-	function createPlayers(state) {
-	    console.log(state);
-	    var players = generators_1.generatePlayers({ allTiles: state.tiles }).map(function (p) {
-	        return updatePlayerSeenTiles(p);
+	    if (result.length === 0) return state;
+	    var nextState = updateSelectedUnit(state, function () {
+	        return {
+	            tileId: action.payload,
+	            movementLeft: result[0].movementLeft
+	        };
 	    });
-	    var selectedUnit = players[0].units[0];
-	    var firstUnitTileCameraPosition = utils_1.getTileCameraPosition(selectedUnit.tileId, state.camera.zoom);
+	    return updateCurrentPlayer(nextState, function (player) {
+	        return player_1.updatePlayerSeenTiles(player);
+	    });
+	};
+	exports.createCity = function (state) {
+	    var tileId = state.players[state.currentPlayerIndex].units.filter(function (unit) {
+	        return state.selection && unit.id === state.selection.id;
+	    })[0].tileId;
+	
+	    var playerId = state.players[state.currentPlayerIndex].id;
+	    var town = generators_1.generateTown(tileId, playerId);
+	    state = updateCurrentPlayer(state, function (p) {
+	        return {
+	            units: p.units.filter(function (u) {
+	                return state.selection && u.id !== state.selection.id;
+	            }),
+	            towns: [].concat(_toConsumableArray(p.towns), [town])
+	        };
+	    });
 	    return utils_1.merge(state, {
-	        selection: {
-	            type: 'unit',
-	            id: selectedUnit.id
-	        },
-	        players: players,
-	        camera: utils_1.merge(state.camera, firstUnitTileCameraPosition)
-	    });
-	}
-	exports.createPlayers = createPlayers;
-	function nextTurn(state) {
-	    var nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
-	    var nextPlayer = state.players[nextPlayerIndex];
-	
-	    var _utils_1$getSelected = utils_1.getSelected(nextPlayer, state.camera.zoom);
-	
-	    var selection = _utils_1$getSelected.selection;
-	    var tilePosition = _utils_1$getSelected.tilePosition;
-	
-	    return utils_1.merge(state, {
-	        selection: selection,
-	        currentPlayerIndex: nextPlayerIndex,
-	        turn: state.turn + (nextPlayerIndex === 0 ? 1 : 0),
-	        camera: tilePosition ? utils_1.merge(state.camera, tilePosition) : state.camera,
-	        players: state.players.map(function (p) {
-	            return utils_1.merge(p, {
-	                units: p.units.map(function (unit) {
-	                    return utils_1.merge(unit, {
-	                        movementLeft: unit.movement
-	                    });
-	                })
-	            });
+	        selection: utils_1.merge(state.selection, {
+	            type: 'town',
+	            id: town.id
 	        })
 	    });
+	};
+	exports.distanceAttack = function (state, action) {
+	    return state;
+	};
+	exports.meleeAttack = function (state, action) {
+	    var enemy = action.payload;
+	    var selectedtUnit = utils_1.getSelectedUnit(state);
+	    if (!isMeleeAttackAvailableFactory(state)(enemy)) return state;
+	    var ids = utils_1.getSurroundingTileIds([selectedtUnit.tileId]);
+	    if (ids.indexOf(enemy.tileId) === -1) return state;
+	    var hpLeft = enemy.hpLeft - selectedtUnit.meleeDamage;
+	    if (hpLeft <= 0) {
+	        state = removeUnitFromState(state, enemy);
+	        state = updateUnit(state, selectedtUnit, {
+	            tileId: enemy.tileId,
+	            movementLeft: 0
+	        });
+	    } else {
+	        state = updateUnit(state, enemy, { hpLeft: hpLeft });
+	        state = updateUnit(state, selectedtUnit, { movementLeft: 0 });
+	    }
+	    return state;
+	};
+	function isMeleeAttackAvailableFactory(state) {
+	    var currentUnit = utils_1.getSelectedUnit(state);
+	    return function (enemy) {
+	        return !!enemy && !!currentUnit && !!currentUnit.meleeDamage && currentUnit.movementLeft >= 1 && utils_1.getSurroundingTileIds([currentUnit.tileId]).indexOf(enemy.tileId) !== -1;
+	    };
 	}
-	exports.nextTurn = nextTurn;
+	exports.isMeleeAttackAvailableFactory = isMeleeAttackAvailableFactory;
+	;
+	function updateSelectedUnit(state, fn) {
+	    return updateCurrentPlayer(state, function (p) {
+	        return {
+	            units: p.units.map(function (unit) {
+	                if (!state.selection) {
+	                    return;
+	                }
+	                return unit.id === state.selection.id && state.selection.type === 'unit' ? utils_1.merge(unit, fn(unit)) : unit;
+	            })
+	        };
+	    });
+	}
+	function updateCurrentPlayer(state, fn) {
+	    var currentPlayer = state.players[state.currentPlayerIndex];
+	    return utils_1.merge(state, {
+	        players: [].concat(_toConsumableArray(state.players.slice(0, state.currentPlayerIndex)), [utils_1.merge(currentPlayer, fn(currentPlayer))], _toConsumableArray(state.players.slice(state.currentPlayerIndex + 1)))
+	    });
+	}
+	function updateUnit(state, unit, enhancement) {
+	    var player = state.players[unit.ownerId];
+	    var unitIndex = player.units.indexOf(unit);
+	    return updatePlayer(state, state.players[unit.ownerId], {
+	        units: [].concat(_toConsumableArray(player.units.slice(0, unitIndex)), [utils_1.merge(unit, enhancement)], _toConsumableArray(player.units.slice(unitIndex + 1)))
+	    });
+	}
+	function removeUnitFromState(state, unit) {
+	    var player = state.players[unit.ownerId];
+	    var unitIndex = player.units.indexOf(unit);
+	    return updatePlayer(state, player, {
+	        units: [].concat(_toConsumableArray(player.units.slice(0, unitIndex)), _toConsumableArray(player.units.slice(unitIndex + 1)))
+	    });
+	}
+	function updatePlayer(state, player, enhancement) {
+	    return utils_1.merge(state, {
+	        players: [].concat(_toConsumableArray(state.players.slice(0, player.id)), [utils_1.merge(player, enhancement)], _toConsumableArray(state.players.slice(player.id + 1)))
+	    });
+	}
 
 /***/ },
-/* 214 */
+/* 198 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -24952,20 +24662,20 @@
 	        if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 	    }
 	}
-	__export(__webpack_require__(215));
-	__export(__webpack_require__(247));
-	__export(__webpack_require__(248));
+	__export(__webpack_require__(199));
+	__export(__webpack_require__(231));
+	__export(__webpack_require__(232));
 
 /***/ },
-/* 215 */
+/* 199 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	
 	var constants_1 = __webpack_require__(30);
 	var utils_1 = __webpack_require__(190);
-	var intersection = __webpack_require__(216);
-	var node_uuid_1 = __webpack_require__(224);
+	var intersection = __webpack_require__(200);
+	var node_uuid_1 = __webpack_require__(208);
 	function generatePlayers(_ref) {
 	    var allTiles = _ref.allTiles;
 	
@@ -25022,13 +24732,13 @@
 	exports.generatePlayers = generatePlayers;
 
 /***/ },
-/* 216 */
+/* 200 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var arrayMap = __webpack_require__(58),
-	    baseIntersection = __webpack_require__(217),
-	    baseRest = __webpack_require__(221),
-	    castArrayLikeObject = __webpack_require__(223);
+	    baseIntersection = __webpack_require__(201),
+	    baseRest = __webpack_require__(205),
+	    castArrayLikeObject = __webpack_require__(207);
 	
 	/**
 	 * Creates an array of unique values that are included in all given arrays
@@ -25058,15 +24768,15 @@
 
 
 /***/ },
-/* 217 */
+/* 201 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var SetCache = __webpack_require__(155),
-	    arrayIncludes = __webpack_require__(218),
-	    arrayIncludesWith = __webpack_require__(219),
+	    arrayIncludes = __webpack_require__(202),
+	    arrayIncludesWith = __webpack_require__(203),
 	    arrayMap = __webpack_require__(58),
 	    baseUnary = __webpack_require__(166),
-	    cacheHas = __webpack_require__(220);
+	    cacheHas = __webpack_require__(204);
 	
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeMin = Math.min;
@@ -25138,7 +24848,7 @@
 
 
 /***/ },
-/* 218 */
+/* 202 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseIndexOf = __webpack_require__(45);
@@ -25161,7 +24871,7 @@
 
 
 /***/ },
-/* 219 */
+/* 203 */
 /***/ function(module, exports) {
 
 	/**
@@ -25189,7 +24899,7 @@
 
 
 /***/ },
-/* 220 */
+/* 204 */
 /***/ function(module, exports) {
 
 	/**
@@ -25208,10 +24918,10 @@
 
 
 /***/ },
-/* 221 */
+/* 205 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var apply = __webpack_require__(222);
+	var apply = __webpack_require__(206);
 	
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeMax = Math.max;
@@ -25249,7 +24959,7 @@
 
 
 /***/ },
-/* 222 */
+/* 206 */
 /***/ function(module, exports) {
 
 	/**
@@ -25276,7 +24986,7 @@
 
 
 /***/ },
-/* 223 */
+/* 207 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isArrayLikeObject = __webpack_require__(63);
@@ -25296,7 +25006,7 @@
 
 
 /***/ },
-/* 224 */
+/* 208 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(Buffer) {//     uuid.js
@@ -25357,7 +25067,7 @@
 	    // Moderately fast, high quality
 	    if (true) {
 	      try {
-	        var _rb = __webpack_require__(229).randomBytes;
+	        var _rb = __webpack_require__(213).randomBytes;
 	        _nodeRNG = _rng = _rb && function() {return _rb(16);};
 	        _rng();
 	      } catch(e) {}
@@ -25572,10 +25282,10 @@
 	  }
 	})('undefined' !== typeof window ? window : null);
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(225).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(209).Buffer))
 
 /***/ },
-/* 225 */
+/* 209 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer, global) {/*!
@@ -25588,9 +25298,9 @@
 	
 	'use strict'
 	
-	var base64 = __webpack_require__(226)
-	var ieee754 = __webpack_require__(227)
-	var isArray = __webpack_require__(228)
+	var base64 = __webpack_require__(210)
+	var ieee754 = __webpack_require__(211)
+	var isArray = __webpack_require__(212)
 	
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -27368,10 +27078,10 @@
 	  return val !== val // eslint-disable-line no-self-compare
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(225).Buffer, (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(209).Buffer, (function() { return this; }())))
 
 /***/ },
-/* 226 */
+/* 210 */
 /***/ function(module, exports) {
 
 	'use strict'
@@ -27486,7 +27196,7 @@
 
 
 /***/ },
-/* 227 */
+/* 211 */
 /***/ function(module, exports) {
 
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -27576,7 +27286,7 @@
 
 
 /***/ },
-/* 228 */
+/* 212 */
 /***/ function(module, exports) {
 
 	var toString = {}.toString;
@@ -27587,10 +27297,10 @@
 
 
 /***/ },
-/* 229 */
+/* 213 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(230)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(214)
 	
 	function error () {
 	  var m = [].slice.call(arguments).join(' ')
@@ -27601,9 +27311,9 @@
 	    ].join('\n'))
 	}
 	
-	exports.createHash = __webpack_require__(232)
+	exports.createHash = __webpack_require__(216)
 	
-	exports.createHmac = __webpack_require__(244)
+	exports.createHmac = __webpack_require__(228)
 	
 	exports.randomBytes = function(size, callback) {
 	  if (callback && callback.call) {
@@ -27624,7 +27334,7 @@
 	  return ['sha1', 'sha256', 'sha512', 'md5', 'rmd160']
 	}
 	
-	var p = __webpack_require__(245)(exports)
+	var p = __webpack_require__(229)(exports)
 	exports.pbkdf2 = p.pbkdf2
 	exports.pbkdf2Sync = p.pbkdf2Sync
 	
@@ -27644,16 +27354,16 @@
 	  }
 	})
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(225).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(209).Buffer))
 
 /***/ },
-/* 230 */
+/* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, Buffer) {(function() {
 	  var g = ('undefined' === typeof window ? global : window) || {}
 	  _crypto = (
-	    g.crypto || g.msCrypto || __webpack_require__(231)
+	    g.crypto || g.msCrypto || __webpack_require__(215)
 	  )
 	  module.exports = function(size) {
 	    // Modern Browsers
@@ -27677,22 +27387,22 @@
 	  }
 	}())
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(225).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(209).Buffer))
 
 /***/ },
-/* 231 */
+/* 215 */
 /***/ function(module, exports) {
 
 	/* (ignored) */
 
 /***/ },
-/* 232 */
+/* 216 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(233)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(217)
 	
-	var md5 = toConstructor(__webpack_require__(241))
-	var rmd160 = toConstructor(__webpack_require__(243))
+	var md5 = toConstructor(__webpack_require__(225))
+	var rmd160 = toConstructor(__webpack_require__(227))
 	
 	function toConstructor (fn) {
 	  return function () {
@@ -27720,10 +27430,10 @@
 	  return createHash(alg)
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(225).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(209).Buffer))
 
 /***/ },
-/* 233 */
+/* 217 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function (alg) {
@@ -27732,16 +27442,16 @@
 	  return new Alg()
 	}
 	
-	var Buffer = __webpack_require__(225).Buffer
-	var Hash   = __webpack_require__(234)(Buffer)
+	var Buffer = __webpack_require__(209).Buffer
+	var Hash   = __webpack_require__(218)(Buffer)
 	
-	exports.sha1 = __webpack_require__(235)(Buffer, Hash)
-	exports.sha256 = __webpack_require__(239)(Buffer, Hash)
-	exports.sha512 = __webpack_require__(240)(Buffer, Hash)
+	exports.sha1 = __webpack_require__(219)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(223)(Buffer, Hash)
+	exports.sha512 = __webpack_require__(224)(Buffer, Hash)
 
 
 /***/ },
-/* 234 */
+/* 218 */
 /***/ function(module, exports) {
 
 	module.exports = function (Buffer) {
@@ -27824,7 +27534,7 @@
 
 
 /***/ },
-/* 235 */
+/* 219 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -27836,7 +27546,7 @@
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 	
-	var inherits = __webpack_require__(236).inherits
+	var inherits = __webpack_require__(220).inherits
 	
 	module.exports = function (Buffer, Hash) {
 	
@@ -27968,7 +27678,7 @@
 
 
 /***/ },
-/* 236 */
+/* 220 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -28496,7 +28206,7 @@
 	}
 	exports.isPrimitive = isPrimitive;
 	
-	exports.isBuffer = __webpack_require__(237);
+	exports.isBuffer = __webpack_require__(221);
 	
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -28540,7 +28250,7 @@
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(238);
+	exports.inherits = __webpack_require__(222);
 	
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -28561,7 +28271,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(5)))
 
 /***/ },
-/* 237 */
+/* 221 */
 /***/ function(module, exports) {
 
 	module.exports = function isBuffer(arg) {
@@ -28572,7 +28282,7 @@
 	}
 
 /***/ },
-/* 238 */
+/* 222 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -28601,7 +28311,7 @@
 
 
 /***/ },
-/* 239 */
+/* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -28613,7 +28323,7 @@
 	 *
 	 */
 	
-	var inherits = __webpack_require__(236).inherits
+	var inherits = __webpack_require__(220).inherits
 	
 	module.exports = function (Buffer, Hash) {
 	
@@ -28754,10 +28464,10 @@
 
 
 /***/ },
-/* 240 */
+/* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(236).inherits
+	var inherits = __webpack_require__(220).inherits
 	
 	module.exports = function (Buffer, Hash) {
 	  var K = [
@@ -29004,7 +28714,7 @@
 
 
 /***/ },
-/* 241 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -29016,7 +28726,7 @@
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 	
-	var helpers = __webpack_require__(242);
+	var helpers = __webpack_require__(226);
 	
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -29165,7 +28875,7 @@
 
 
 /***/ },
-/* 242 */
+/* 226 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
@@ -29203,10 +28913,10 @@
 	
 	module.exports = { hash: hash };
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(225).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(209).Buffer))
 
 /***/ },
-/* 243 */
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -29415,13 +29125,13 @@
 	
 	
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(225).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(209).Buffer))
 
 /***/ },
-/* 244 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(232)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(216)
 	
 	var zeroBuffer = new Buffer(128)
 	zeroBuffer.fill(0)
@@ -29465,13 +29175,13 @@
 	}
 	
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(225).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(209).Buffer))
 
 /***/ },
-/* 245 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var pbkdf2Export = __webpack_require__(246)
+	var pbkdf2Export = __webpack_require__(230)
 	
 	module.exports = function (crypto, exports) {
 	  exports = exports || {}
@@ -29486,7 +29196,7 @@
 
 
 /***/ },
-/* 246 */
+/* 230 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = function(crypto) {
@@ -29574,10 +29284,10 @@
 	  }
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(225).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(209).Buffer))
 
 /***/ },
-/* 247 */
+/* 231 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -29608,12 +29318,12 @@
 	exports.generateTiles = generateTiles;
 
 /***/ },
-/* 248 */
+/* 232 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	
-	var node_uuid_1 = __webpack_require__(224);
+	var node_uuid_1 = __webpack_require__(208);
 	function generateTown(tileId, playerId) {
 	    return {
 	        tileId: tileId,
@@ -29626,7 +29336,7 @@
 	exports.generateTown = generateTown;
 
 /***/ },
-/* 249 */
+/* 233 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -29634,112 +29344,479 @@
 	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 	
 	var utils_1 = __webpack_require__(190);
-	var generators_1 = __webpack_require__(214);
-	var player_1 = __webpack_require__(213);
-	exports.maybeMoveBy = function (state, action) {
-	    if (state.selection && state.selection.type !== 'unit') return state;
-	    var currentPlayer = state.players[state.currentPlayerIndex];
-	    var activeUnit = utils_1.getSelectedUnit(state);
-	    if (!activeUnit) return state;
-	    var movementAvailableMap = utils_1.getAvailableMoves(state.tiles[activeUnit.tileId], currentPlayer.seenTileIds.map(function (id) {
-	        return state.tiles[id];
-	    }), activeUnit.movementLeft);
-	    if (movementAvailableMap.length === 0) return state;
-	    var result = movementAvailableMap.filter(function (map) {
-	        return map.tile === state.tiles[action.payload];
+	var lodash_1 = __webpack_require__(193);
+	var generators_1 = __webpack_require__(198);
+	function updatePlayerSeenTiles(player) {
+	    return utils_1.merge(player, {
+	        seenTileIds: lodash_1.uniq([].concat(_toConsumableArray(player.seenTileIds), _toConsumableArray(utils_1.getSurroundingTileIds(utils_1.getSurroundingTileIds([].concat(_toConsumableArray(player.units.map(function (u) {
+	            return u.tileId;
+	        })), _toConsumableArray(player.towns.map(function (t) {
+	            return t.tileId;
+	        }))))))))
 	    });
-	    if (result.length === 0) return state;
-	    var nextState = updateSelectedUnit(state, function () {
-	        return {
-	            tileId: action.payload,
-	            movementLeft: result[0].movementLeft
-	        };
+	}
+	exports.updatePlayerSeenTiles = updatePlayerSeenTiles;
+	function createPlayers(state) {
+	    console.log(state);
+	    var players = generators_1.generatePlayers({ allTiles: state.tiles }).map(function (p) {
+	        return updatePlayerSeenTiles(p);
 	    });
-	    return updateCurrentPlayer(nextState, function (player) {
-	        return player_1.updatePlayerSeenTiles(player);
-	    });
-	};
-	exports.createCity = function (state) {
-	    var tileId = state.players[state.currentPlayerIndex].units.filter(function (unit) {
-	        return state.selection && unit.id === state.selection.id;
-	    })[0].tileId;
-	
-	    var playerId = state.players[state.currentPlayerIndex].id;
-	    var town = generators_1.generateTown(tileId, playerId);
-	    state = updateCurrentPlayer(state, function (p) {
-	        return {
-	            units: p.units.filter(function (u) {
-	                return state.selection && u.id !== state.selection.id;
-	            }),
-	            towns: [].concat(_toConsumableArray(p.towns), [town])
-	        };
-	    });
+	    var selectedUnit = players[0].units[0];
+	    var firstUnitTileCameraPosition = utils_1.getTileCameraPosition(selectedUnit.tileId, state.camera.zoom);
 	    return utils_1.merge(state, {
-	        selection: utils_1.merge(state.selection, {
-	            type: 'town',
-	            id: town.id
+	        selection: {
+	            type: 'unit',
+	            id: selectedUnit.id
+	        },
+	        players: players,
+	        camera: utils_1.merge(state.camera, firstUnitTileCameraPosition)
+	    });
+	}
+	exports.createPlayers = createPlayers;
+	function nextTurn(state) {
+	    var nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+	    var nextPlayer = state.players[nextPlayerIndex];
+	
+	    var _utils_1$getSelected = utils_1.getSelected(nextPlayer, state.camera.zoom);
+	
+	    var selection = _utils_1$getSelected.selection;
+	    var tilePosition = _utils_1$getSelected.tilePosition;
+	
+	    return utils_1.merge(state, {
+	        selection: selection,
+	        currentPlayerIndex: nextPlayerIndex,
+	        turn: state.turn + (nextPlayerIndex === 0 ? 1 : 0),
+	        camera: tilePosition ? utils_1.merge(state.camera, tilePosition) : state.camera,
+	        players: state.players.map(function (p) {
+	            return utils_1.merge(p, {
+	                units: p.units.map(function (unit) {
+	                    return utils_1.merge(unit, {
+	                        movementLeft: unit.movement
+	                    });
+	                })
+	            });
 	        })
 	    });
-	};
-	exports.distanceAttack = function (state, action) {
-	    return state;
-	};
-	exports.meleeAttack = function (state, action) {
-	    var currentUnit = utils_1.getSelectedUnit(state);
-	    var enemy = action.payload;
-	    if (!enemy || !currentUnit || !currentUnit.meleeDamage || currentUnit.movementLeft < 1) return state;
-	    var ids = utils_1.getSurroundingTileIds([currentUnit.tileId]);
-	    if (ids.indexOf(enemy.tileId) === -1) return state;
-	    var hpLeft = enemy.hpLeft - currentUnit.meleeDamage;
-	    if (hpLeft <= 0) {
-	        state = removeUnitFromState(state, enemy);
-	        state = updateUnit(state, currentUnit, {
-	            tileId: enemy.tileId,
-	            movementLeft: 0
+	}
+	exports.nextTurn = nextTurn;
+
+/***/ },
+/* 234 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	var React = __webpack_require__(1);
+	var react_redux_1 = __webpack_require__(3);
+	var actions_1 = __webpack_require__(36);
+	var TownComponent_1 = __webpack_require__(235);
+	function _Towns(_ref) {
+	    var players = _ref.players;
+	    var currentPlayer = _ref.currentPlayer;
+	    var zoom = _ref.zoom;
+	    var selected = _ref.selected;
+	    var dispatch = _ref.dispatch;
+	
+	    var towns = players.map(function (player) {
+	        return player.towns.filter(function (town) {
+	            return currentPlayer.seenTileIds.indexOf(town.tileId) > -1;
+	        }).map(function (town) {
+	            return React.createElement(TownComponent_1.TownComponent, { town: town, scale: zoom, key: town.id, selected: player.id === currentPlayer.id && selected.id === town.id, onContextMenu: function onContextMenu() {}, onClick: function onClick() {
+	                    if (town.ownerId === currentPlayer.id) {
+	                        dispatch(actions_1.selectTown(town));
+	                    }
+	                } });
 	        });
-	    } else {
-	        state = updateUnit(state, enemy, { hpLeft: hpLeft });
-	        state = updateUnit(state, currentUnit, { movementLeft: 0 });
+	    });
+	    return React.createElement("g", { className: 'towns' }, towns);
+	}
+	exports._Towns = _Towns;
+	exports.Towns = react_redux_1.connect(function (state) {
+	    return {
+	        currentPlayer: state.players[state.currentPlayerIndex],
+	        players: state.players,
+	        selected: state.selection,
+	        zoom: state.camera.zoom
+	    };
+	})(_Towns);
+
+/***/ },
+/* 235 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	var React = __webpack_require__(1);
+	var utils_1 = __webpack_require__(190);
+	var Hex_1 = __webpack_require__(195);
+	var constants_1 = __webpack_require__(30);
+	var classnames = __webpack_require__(196);
+	function TownComponent(_ref) {
+	    var town = _ref.town;
+	    var _onContextMenu = _ref.onContextMenu;
+	    var _onClick = _ref.onClick;
+	    var selected = _ref.selected;
+	    var scale = _ref.scale;
+	
+	    var _utils_1$getTileCamer = utils_1.getTileCameraPosition(town.tileId, scale);
+	
+	    var left = _utils_1$getTileCamer.left;
+	    var top = _utils_1$getTileCamer.top;
+	
+	    return React.createElement("g", { onContextMenu: function onContextMenu() {
+	            return _onContextMenu();
+	        }, onClick: function onClick() {
+	            return _onClick();
+	        }, className: classnames('town', {
+	            'selected': selected
+	        }), transform: 'translate(' + left + ', ' + top + ')' }, React.createElement(Hex_1.Hex, { scale: scale, pattern: 'middle-age-city' }), React.createElement("text", { fontSize: 40 * scale, x: constants_1.TILE_WIDTH * scale / 2, textAnchor: 'middle', fill: 'white' }, town.name));
+	}
+	exports.TownComponent = TownComponent;
+	;
+
+/***/ },
+/* 236 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	var React = __webpack_require__(1);
+	var react_redux_1 = __webpack_require__(3);
+	var actions_1 = __webpack_require__(36);
+	var TileComponent_1 = __webpack_require__(237);
+	var utils_1 = __webpack_require__(190);
+	function _Tiles(_ref) {
+	    var players = _ref.players;
+	    var currentPlayerIndex = _ref.currentPlayerIndex;
+	    var camera = _ref.camera;
+	    var tiles = _ref.tiles;
+	    var hoveredTileIndex = _ref.hoveredTileIndex;
+	    var dispatch = _ref.dispatch;
+	
+	    var currentPlayer = players[currentPlayerIndex];
+	    var visibleTiles = currentPlayer.seenTileIds.map(function (id) {
+	        return tiles[id];
+	    }).filter(function (tile) {
+	        return utils_1.isTileVisible(tile, camera);
+	    }).map(function (tile) {
+	        return React.createElement(TileComponent_1.TileComponent, { width: 200, hovered: hoveredTileIndex === tile.id, onMouseEnter: function onMouseEnter() {
+	                return dispatch(actions_1.hoverTile(tile.id));
+	            }, tile: tile, key: tile.id, scale: camera.zoom, onContextMenu: function onContextMenu() {
+	                return dispatch(actions_1.maybeMoveCurrentUnit(tile));
+	            }, onClick: function onClick() {
+	                return dispatch(actions_1.deselect());
+	            } });
+	    });
+	    return React.createElement("g", { className: 'tiles' }, visibleTiles);
+	}
+	exports._Tiles = _Tiles;
+	exports.Tiles = react_redux_1.connect(function (state) {
+	    return {
+	        currentPlayerIndex: state.currentPlayerIndex,
+	        players: state.players,
+	        camera: state.camera,
+	        tiles: state.tiles,
+	        hoveredTileIndex: state.hoveredTileIndex
+	    };
+	})(_Tiles);
+
+/***/ },
+/* 237 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var React = __webpack_require__(1);
+	var utils_1 = __webpack_require__(190);
+	var Hex_1 = __webpack_require__(195);
+	
+	var TileComponent = function (_React$Component) {
+	    _inherits(TileComponent, _React$Component);
+	
+	    function TileComponent() {
+	        _classCallCheck(this, TileComponent);
+	
+	        return _possibleConstructorReturn(this, (TileComponent.__proto__ || Object.getPrototypeOf(TileComponent)).apply(this, arguments));
 	    }
-	    return state;
+	
+	    _createClass(TileComponent, [{
+	        key: 'render',
+	        value: function render() {
+	            var _props = this.props;
+	            var tile = _props.tile;
+	            var _onContextMenu = _props.onContextMenu;
+	            var _onClick = _props.onClick;
+	            var _onMouseEnter = _props.onMouseEnter;
+	            var scale = _props.scale;
+	            var hovered = _props.hovered;
+	
+	            var _utils_1$getTileCamer = utils_1.getTileCameraPosition(tile.id, scale);
+	
+	            var left = _utils_1$getTileCamer.left;
+	            var top = _utils_1$getTileCamer.top;
+	
+	            return React.createElement("g", { onMouseEnter: function onMouseEnter() {
+	                    return _onMouseEnter();
+	                }, onContextMenu: function onContextMenu() {
+	                    return _onContextMenu();
+	                }, onClick: function onClick() {
+	                    return _onClick();
+	                }, className: 'tile', transform: 'translate(' + left + ', ' + top + ')' }, React.createElement(Hex_1.Hex, { scale: scale, pattern: tile.type }));
+	        }
+	    }]);
+	
+	    return TileComponent;
+	}(React.Component);
+	
+	exports.TileComponent = TileComponent;
+	;
+
+/***/ },
+/* 238 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	var React = __webpack_require__(1);
+	var react_redux_1 = __webpack_require__(3);
+	var utils_1 = __webpack_require__(190);
+	var constants_1 = __webpack_require__(30);
+	function _SelectedUnitMovement(_ref) {
+	    var selection = _ref.selection;
+	    var activePlayer = _ref.activePlayer;
+	    var camera = _ref.camera;
+	    var tiles = _ref.tiles;
+	
+	    if (!selection || selection.type !== 'unit') return React.createElement("g", null);
+	    var activeUnit = activePlayer.units.filter(function (unit) {
+	        return unit.id === selection.id;
+	    })[0];
+	    var seenTiles = activePlayer.seenTileIds.map(function (id) {
+	        return tiles[id];
+	    });
+	    var availableTiles = utils_1.getAvailableTilesForUnit(activeUnit, seenTiles).filter(function (tile) {
+	        return utils_1.isTileVisible(tile, camera);
+	    });
+	    return React.createElement("g", null, availableTiles.map(function (tile) {
+	        var position = utils_1.getTileCameraPosition(tile.id, camera.zoom);
+	        return React.createElement("g", { transform: 'translate(' + position.left + ', ' + position.top + ')', key: tile.id }, React.createElement("circle", { className: 'move-marker', cx: constants_1.TILE_WIDTH * camera.zoom / 2, cy: constants_1.TILE_WIDTH * camera.zoom / 2, r: 30 * camera.zoom, stroke: 'green', strokeWidth: 10 * camera.zoom, fill: 'yellow', opacity: 0.6 }));
+	    }));
+	}
+	exports.SelectedUnitMovement = react_redux_1.connect(function (state) {
+	    return {
+	        activePlayer: state.players[state.currentPlayerIndex],
+	        selection: state.selection,
+	        camera: state.camera,
+	        tiles: state.tiles
+	    };
+	})(_SelectedUnitMovement);
+
+/***/ },
+/* 239 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 240 */,
+/* 241 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var React = __webpack_require__(1);
+	var react_redux_1 = __webpack_require__(3);
+	var icons_1 = __webpack_require__(242);
+	var actions_1 = __webpack_require__(36);
+	var utils_1 = __webpack_require__(190);
+	__webpack_require__(243);
+	var SettlerOptions = function SettlerOptions(_ref) {
+	    var dispatch = _ref.dispatch;
+	
+	    return React.createElement("div", { className: 'settler-options' }, React.createElement("div", { className: 'option' }, React.createElement("a", { onClick: function onClick() {
+	            return dispatch(actions_1.createCity());
+	        } }, React.createElement(icons_1.IconHome, null))));
 	};
-	function updateSelectedUnit(state, fn) {
-	    return updateCurrentPlayer(state, function (p) {
-	        return {
-	            units: p.units.map(function (unit) {
-	                if (!state.selection) {
-	                    return;
-	                }
-	                return unit.id === state.selection.id && state.selection.type === 'unit' ? utils_1.merge(unit, fn(unit)) : unit;
-	            })
-	        };
+	
+	var _UnitMenu = function (_React$Component) {
+	    _inherits(_UnitMenu, _React$Component);
+	
+	    function _UnitMenu() {
+	        _classCallCheck(this, _UnitMenu);
+	
+	        return _possibleConstructorReturn(this, (_UnitMenu.__proto__ || Object.getPrototypeOf(_UnitMenu)).apply(this, arguments));
+	    }
+	
+	    _createClass(_UnitMenu, [{
+	        key: 'render',
+	        value: function render() {
+	            var selectedUnit = this.props.selectedUnit;
+	
+	            if (!selectedUnit) return null;
+	            return React.createElement("div", { className: 'unit-side-menu' }, React.createElement("h2", null, selectedUnit.name.toUpperCase()), React.createElement("div", null, 'Movement: ' + selectedUnit.movementLeft + '/' + selectedUnit.movement), React.createElement("div", null, 'Hp: ' + selectedUnit.hpLeft + '/' + selectedUnit.hp), selectedUnit.name === 'warrior' && React.createElement("div", null, 'Melee dmg: ' + selectedUnit.meleeDamage), React.createElement("div", { className: 'unit-options' }, this.renderOptions()));
+	        }
+	    }, {
+	        key: 'renderOptions',
+	        value: function renderOptions() {
+	            var selectedUnit = this.props.selectedUnit;
+	
+	            switch (selectedUnit.name) {
+	                case 'settler':
+	                    return React.createElement(SettlerOptions, { dispatch: this.props.dispatch });
+	                default:
+	                    return null;
+	            }
+	        }
+	    }]);
+	
+	    return _UnitMenu;
+	}(React.Component);
+	
+	exports.UnitMenu = react_redux_1.connect(function (state) {
+	    return {
+	        selectedUnit: utils_1.getSelectedUnit(state)
+	    };
+	})(_UnitMenu);
+
+/***/ },
+/* 242 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	var React = __webpack_require__(1);
+	exports.IconReload = function () {
+	    return React.createElement("svg", { viewBox: '0 0 1000 1000' }, React.createElement("g", null, React.createElement("path", { d: 'M987.4,466.9l-54,95.1l-54.7,96.4h-0.1c-2.7,4.4-7.5,7.4-13.1,7.4c-5.6,0-10.6-3.1-13.3-7.7l0,0L797.8,562l-54.1-95.4c-1.5-2.4-2.4-5.3-2.4-8.3c0-8.7,6.9-15.7,15.5-15.7h70.8C800.8,284.2,665.2,163.8,502,163.8c-63.6,0-123,18.3-173.4,50c-6.8,4.9-15.1,7.9-24,7.9c-22.8,0-41.3-18.8-41.3-42c0-15.9,8.8-29.8,21.6-36.9C348,103,422.4,80,502.1,80C711,80,883.5,237.7,911.1,442.5h63.5c8.5,0,15.4,7,15.4,15.7C990,461.4,989,464.4,987.4,466.9z M243.2,491.3h-71.5c-0.1,2.9-0.1,5.7-0.1,8.7c0,185.7,147.9,336.2,330.4,336.2c74.4,0,143-25,198.3-67.3c0,0,0,0.1,0.1,0.1c7.4-7.1,17.3-11.4,28.2-11.4c22.8,0,41.3,18.8,41.3,42c0,12.4-5.3,23.7-13.8,31.4c0,0,0,0,0,0.1c-0.3,0.2-0.6,0.5-0.9,0.7c-1,0.8-2.1,1.6-3.1,2.4c-69.4,53.8-156,85.8-250,85.8c-228,0-412.8-188.1-412.8-420c0-2.9,0-5.8,0.1-8.8h-64c-8.5,0-15.4-7-15.4-15.7c0-3.1,0.9-6,2.4-8.4l54.2-95.4l54.5-96h0c2.7-4.6,7.6-7.7,13.2-7.7c5.5,0,10.4,2.9,13.1,7.4h0.1l54.7,96.3l54,95.2c1.6,2.5,2.5,5.5,2.5,8.7C258.7,484.3,251.8,491.3,243.2,491.3z' })));
+	};
+	exports.IconHome = function () {
+	    return React.createElement("svg", { viewBox: '0 -256 1792 1792' }, React.createElement("g", { transform: 'matrix(1,0,0,-1,68.338983,1285.4237)' }, React.createElement("path", { d: 'M 1408,544 V 64 Q 1408,38 1389,19 1370,0 1344,0 H 960 V 384 H 704 V 0 H 320 q -26,0 -45,19 -19,19 -19,45 v 480 q 0,1 0.5,3 0.5,2 0.5,3 l 575,474 575,-474 q 1,-2 1,-6 z m 223,69 -62,-74 q -8,-9 -21,-11 h -3 q -13,0 -21,7 L 832,1112 140,535 q -12,-8 -24,-7 -13,2 -21,11 l -62,74 q -8,10 -7,23.5 1,13.5 11,21.5 l 719,599 q 32,26 76,26 44,0 76,-26 l 244,-204 v 195 q 0,14 9,23 9,9 23,9 h 192 q 14,0 23,-9 9,-9 9,-23 V 840 l 219,-182 q 10,-8 11,-21.5 1,-13.5 -7,-23.5 z' })));
+	};
+	exports.IconNext = function () {
+	    return React.createElement("svg", { viewBox: "0 0 477.175 477.175" }, React.createElement("g", null, React.createElement("path", { d: "M360.731,229.075l-225.1-225.1c-5.3-5.3-13.8-5.3-19.1,0s-5.3,13.8,0,19.1l215.5,215.5l-215.5,215.5 c-5.3, 5.3-5.3, 13.8, 0, 19.1c2.6, 2.6, 6.1, 4, 9.5, 4c3.4, 0, 6.9-1.3, 9.5-4l225.1-225.1C365.931, 242.875, 365.931, 234.275, 360.731, 229.075z" })));
+	};
+
+/***/ },
+/* 243 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 244 */,
+/* 245 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	var React = __webpack_require__(1);
+	var react_redux_1 = __webpack_require__(3);
+	var actions_1 = __webpack_require__(36);
+	var icons_1 = __webpack_require__(242);
+	var utils_1 = __webpack_require__(190);
+	__webpack_require__(246);
+	var _BottomMenu = function _BottomMenu(_ref) {
+	    var nextSelectionExist = _ref.nextSelectionExist;
+	    var dispatch = _ref.dispatch;
+	
+	    return React.createElement("div", { className: 'bottom-menu' }, nextSelectionExist && React.createElement("div", { className: 'next', onClick: function onClick() {
+	            return dispatch(actions_1.nextSelection());
+	        } }, React.createElement(icons_1.IconNext, null)), React.createElement("div", { className: 'next', onClick: function onClick() {
+	            return dispatch(actions_1.nextTurn());
+	        } }, React.createElement(icons_1.IconReload, null)));
+	};
+	exports.BottomMenu = react_redux_1.connect(function (state) {
+	    return {
+	        nextSelectionExist: !!utils_1.getNextSelection(state)
+	    };
+	}, function (dispatch) {
+	    return { dispatch: dispatch };
+	})(_BottomMenu);
+
+/***/ },
+/* 246 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 247 */,
+/* 248 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	var constants_1 = __webpack_require__(30);
+	var redux_1 = __webpack_require__(11);
+	var redux_2 = __webpack_require__(11);
+	var reducer_1 = __webpack_require__(249);
+	var actions_1 = __webpack_require__(36);
+	var promise = __webpack_require__(252);
+	var createLogger = __webpack_require__(259);
+	function configureStore() {
+	    return localforage.getItem(constants_1.STORAGE_KEY).then(function (data) {
+	        var middlewares = [promise, createLogger()];
+	        var store = data ? redux_2.createStore(reducer_1.default, data, redux_1.applyMiddleware.apply(redux_1, middlewares)) : redux_2.createStore(reducer_1.default, redux_1.applyMiddleware.apply(redux_1, middlewares));
+	        if (!data) {
+	            store.dispatch(actions_1.generatePlayers());
+	        }
+	        window.getState = store.getState;
+	        store.subscribe(function () {
+	            var state = store.getState();
+	            localforage.setItem(constants_1.STORAGE_KEY, state);
+	        });
+	        return store;
 	    });
 	}
-	function updateCurrentPlayer(state, fn) {
-	    var currentPlayer = state.players[state.currentPlayerIndex];
-	    return utils_1.merge(state, {
-	        players: [].concat(_toConsumableArray(state.players.slice(0, state.currentPlayerIndex)), [utils_1.merge(currentPlayer, fn(currentPlayer))], _toConsumableArray(state.players.slice(state.currentPlayerIndex + 1)))
-	    });
-	}
-	function updateUnit(state, unit, enhancement) {
-	    var player = state.players[unit.ownerId];
-	    var unitIndex = player.units.indexOf(unit);
-	    return updatePlayer(state, state.players[unit.ownerId], {
-	        units: [].concat(_toConsumableArray(player.units.slice(0, unitIndex)), [utils_1.merge(unit, enhancement)], _toConsumableArray(player.units.slice(unitIndex + 1)))
-	    });
-	}
-	function removeUnitFromState(state, unit) {
-	    var player = state.players[unit.ownerId];
-	    var unitIndex = player.units.indexOf(unit);
-	    return updatePlayer(state, player, {
-	        units: [].concat(_toConsumableArray(player.units.slice(0, unitIndex)), _toConsumableArray(player.units.slice(unitIndex + 1)))
-	    });
-	}
-	function updatePlayer(state, player, enhancement) {
-	    return utils_1.merge(state, {
-	        players: [].concat(_toConsumableArray(state.players.slice(0, player.id)), [utils_1.merge(player, enhancement)], _toConsumableArray(state.players.slice(player.id + 1)))
-	    });
-	}
+	exports.configureStore = configureStore;
+
+/***/ },
+/* 249 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	var _redux_actions_1$hand;
+	
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+	
+	var actions = __webpack_require__(36);
+	var player_1 = __webpack_require__(233);
+	var generators_1 = __webpack_require__(198);
+	var redux_actions_1 = __webpack_require__(37);
+	var unit_1 = __webpack_require__(197);
+	var camera_1 = __webpack_require__(250);
+	var selection_1 = __webpack_require__(251);
+	exports.initialState = {
+	    tiles: generators_1.generateTiles(),
+	    players: [],
+	    turn: 0,
+	    currentPlayerIndex: 0,
+	    camera: {
+	        left: 0,
+	        top: 0,
+	        zoom: 0.3
+	    },
+	    selection: null,
+	    hoveredTileIndex: 0
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.default = redux_actions_1.handleActions((_redux_actions_1$hand = {}, _defineProperty(_redux_actions_1$hand, actions.GENERATE_PLAYERS, player_1.createPlayers), _defineProperty(_redux_actions_1$hand, actions.NEXT_TURN, player_1.nextTurn), _defineProperty(_redux_actions_1$hand, actions.DESELECT, selection_1.deselect), _defineProperty(_redux_actions_1$hand, actions.SELECT_UNIT, selection_1.selectUnit), _defineProperty(_redux_actions_1$hand, actions.SELECT_TOWN, selection_1.selectTown), _defineProperty(_redux_actions_1$hand, actions.NEXT_SELECTION, selection_1.nextSelection), _defineProperty(_redux_actions_1$hand, actions.MAYBE_MOVE_BY, unit_1.maybeMoveBy), _defineProperty(_redux_actions_1$hand, actions.CREATE_CITY, unit_1.createCity), _defineProperty(_redux_actions_1$hand, actions.DISTANCE_ATTACK, unit_1.distanceAttack), _defineProperty(_redux_actions_1$hand, actions.MELEE_ATTACK, unit_1.meleeAttack), _defineProperty(_redux_actions_1$hand, actions.ZOOM_MAP, camera_1.zoomMap), _defineProperty(_redux_actions_1$hand, actions.MOVE_CAMERA, camera_1.moveCamera), _defineProperty(_redux_actions_1$hand, actions.HOVER_TILE, camera_1.hoverTile), _redux_actions_1$hand), exports.initialState);
 
 /***/ },
 /* 250 */
@@ -29768,6 +29845,12 @@
 	    });
 	}
 	exports.moveCamera = moveCamera;
+	function hoverTile(state, action) {
+	    return utils_1.merge(state, {
+	        hoveredTileIndex: action.payload
+	    });
+	}
+	exports.hoverTile = hoverTile;
 
 /***/ },
 /* 251 */
@@ -30834,6 +30917,116 @@
 
 /***/ },
 /* 260 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 261 */,
+/* 262 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var React = __webpack_require__(1);
+	var react_redux_1 = __webpack_require__(3);
+	var utils_1 = __webpack_require__(190);
+	var constants_1 = __webpack_require__(30);
+	var classnames = __webpack_require__(196);
+	__webpack_require__(263);
+	__webpack_require__(265);
+	
+	var _Tooltip = function (_React$Component) {
+	    _inherits(_Tooltip, _React$Component);
+	
+	    function _Tooltip() {
+	        _classCallCheck(this, _Tooltip);
+	
+	        var _this = _possibleConstructorReturn(this, (_Tooltip.__proto__ || Object.getPrototypeOf(_Tooltip)).call(this));
+	
+	        _this.state = { active: false };
+	        return _this;
+	    }
+	
+	    _createClass(_Tooltip, [{
+	        key: 'componentWillMount',
+	        value: function componentWillMount() {
+	            this.showTooltipAfterTimeout();
+	        }
+	    }, {
+	        key: 'componentWillReceiveProps',
+	        value: function componentWillReceiveProps(props) {
+	            if (props.hoveredTile !== this.props.hoveredTile) {
+	                this.setState({ active: false });
+	                this.showTooltipAfterTimeout();
+	            }
+	        }
+	    }, {
+	        key: 'showTooltipAfterTimeout',
+	        value: function showTooltipAfterTimeout() {
+	            var _this2 = this;
+	
+	            clearTimeout(this.timer);
+	            this.timer = setTimeout(function () {
+	                _this2.setState({ active: true });
+	            }, 1500);
+	        }
+	    }, {
+	        key: 'componentWillUnmount',
+	        value: function componentWillUnmount() {
+	            clearTimeout(this.timer);
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var _props = this.props;
+	            var zoom = _props.zoom;
+	            var hoveredTile = _props.hoveredTile;
+	            var tileOwner = _props.tileOwner;
+	
+	            var tilePosition = utils_1.getTileCameraPosition(hoveredTile.id, zoom);
+	            var tooltipPosition = {
+	                left: tilePosition.left - constants_1.TILE_WIDTH / 2 * zoom,
+	                top: tilePosition.top - constants_1.TILE_HEIGHT * zoom
+	            };
+	            var tileType = utils_1.toUpperCaseFirstLetter(hoveredTile.type);
+	            var tooltipColor = 'rgba(0,0,0,0.8)';
+	            return React.createElement("g", { className: classnames('fade-enter', {
+	                    'fade-enter-active': this.state.active
+	                }) }, this.state.active && React.createElement("g", { transform: utils_1.createCssTransformMatrix(tooltipPosition, zoom) }, React.createElement("polygon", { fill: tooltipColor, points: '0,0 50,0 25.0,22.0', transform: utils_1.createCssTransformMatrix({ top: constants_1.TILE_HEIGHT, left: constants_1.TILE_WIDTH }) }), React.createElement("foreignObject", { x: 0, y: 0, width: constants_1.TILE_WIDTH * 2, height: constants_1.TILE_HEIGHT, fontSize: '200%', className: 'tooltip' }, React.createElement("h1", null, tileType), React.createElement("p", null, "ID: ", hoveredTile.id), React.createElement("p", null, "Owner: ", !tileOwner ? 'none' : tileOwner.nation))));
+	        }
+	    }]);
+	
+	    return _Tooltip;
+	}(React.Component);
+	
+	exports.Tooltip = react_redux_1.connect(function (state) {
+	    var hoveredTile = utils_1.getTileById(state.tiles, state.hoveredTileIndex);
+	    var tileOwner = state.players[hoveredTile.ownerId];
+	    return {
+	        zoom: state.camera.zoom,
+	        hoveredTile: hoveredTile,
+	        tileOwner: tileOwner
+	    };
+	})(_Tooltip);
+
+/***/ },
+/* 263 */
+/***/ function(module, exports) {
+
+	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 264 */,
+/* 265 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin

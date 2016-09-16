@@ -1,11 +1,11 @@
 import { Tile, Camera, Unit, Player } from '../AppState';
-import { MAP_HEIGHT, MAP_WIDTH, TILE_HEIGH, TILE_WIDTH } from '../constants';
+import { MAP_HEIGHT, MAP_WIDTH, TILE_HEIGHT, TILE_WIDTH } from '../constants';
 import { tileTypes } from '../constants';
 import { uniq, flatten } from 'lodash';
 
 export function getTileCameraPosition(tileId: number, zoom: number) {
     const tileWidth = zoom * TILE_WIDTH;
-    const tileHeight = zoom * TILE_HEIGH;
+    const tileHeight = zoom * TILE_HEIGHT;
 
     const position = getTilePositionById(tileId);
 
@@ -20,7 +20,7 @@ export function getTileCameraPosition(tileId: number, zoom: number) {
 
 export function isTileVisible(tile: Tile, camera: Camera) {
     const tileWidth = camera.zoom * TILE_WIDTH;
-    const tileHeight = camera.zoom * TILE_HEIGH;
+    const tileHeight = camera.zoom * TILE_HEIGHT;
 
     const position = getTileCameraPosition(tile.id, camera.zoom);
 
@@ -58,7 +58,7 @@ export function getSurroundingTileIds(tileIds: number[]) {
         surroundingTileIds.push(id + MAP_HEIGHT);
     }
 
-    return surroundingTileIds.filter(x => !!x);
+    return uniq(surroundingTileIds.filter(x => x >= 0 && x < MAP_WIDTH * MAP_HEIGHT));
 }
 
 export function getAvailableTilesForUnit(unit: Unit, allTiles: Tile[]) {
@@ -117,4 +117,14 @@ export function getTilePositionById(id: number) {
         left: id / MAP_WIDTH | 0,
         top: id % MAP_WIDTH,
     };
+}
+
+export function getTileIndexFromCameraPoint(camera: Camera) {
+    const tileWidth = camera.zoom * TILE_WIDTH;
+    const tileHeight = camera.zoom * TILE_HEIGHT;
+
+    const fromLeft = camera.left / tileWidth * 3 / 4 | 0;
+    const fromTop = camera.top / tileHeight | 0;
+
+    return fromLeft * MAP_HEIGHT + fromTop;
 }

@@ -5,6 +5,7 @@ import { selectUnit, meleeAttack } from '../../actions';
 import { UnitComponent } from './UnitComponent';
 import { Action } from 'redux-actions';
 import { Dispatch } from 'redux';
+import { isMeleeAttackAvailableFactory } from '../../reducers/unit';
 
 interface UnitsProps {
     players: Player[];
@@ -12,25 +13,25 @@ interface UnitsProps {
     zoom: number;
     selection: Selection | null;
     dispatch: Dispatch<AppState>;
+    isMeleeAttackAvailable(unit: Unit): boolean;
 }
 
-function _Units({ players, currentPlayerIndex, zoom, selection, dispatch}: UnitsProps) {
+function _Units({ players, currentPlayerIndex, zoom, selection, isMeleeAttackAvailable, dispatch}: UnitsProps) {
     const currentPlayer = players[currentPlayerIndex];
 
     const units = players.map(player =>
         player.units
             .filter(unit => currentPlayer.seenTileIds.indexOf(unit.tileId) > -1)
             .map(unit => {
-
+                const meleeAttackAvailable = isMeleeAttackAvailable(unit);
                 return (
                     <UnitComponent
                         unit={unit}
                         scale={zoom}
                         key={unit.id}
                         selected={player.id === currentPlayer.id && !!selection && selection.id === unit.id}
-                        onContextMenu={() =>
-                            unit.ownerId !== currentPlayer.id &&
-                            dispatch(meleeAttack(unit))}
+                        meleeAttackAvailable={meleeAttackAvailable}
+                        onContextMenu={() => meleeAttackAvailable && dispatch(meleeAttack(unit))}
                         onClick={() => unit.ownerId === currentPlayer.id && dispatch(selectUnit(unit))} />
                 );
             })
@@ -45,6 +46,7 @@ export const Units = connect(
         players: state.players,
         selection: state.selection,
         zoom: state.camera.zoom,
+        isMeleeAttackAvailable: isMeleeAttackAvailableFactory(state),
     }),
     (dispatch: Dispatch<AppState>) => ({ dispatch })
 )(_Units);

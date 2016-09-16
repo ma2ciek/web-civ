@@ -39,12 +39,15 @@ export function getSelected(player: Player, zoom: number) {
             id: units[0].id,
         },
         tilePosition: getTileCameraPosition(units[0].tileId, zoom),
-    }) : ({
+    }) : towns.length > 0 ? ({
         selection: {
             type: 'town',
             id: towns[0].id,
         },
         tilePosition: getTileCameraPosition(towns[0].tileId, zoom),
+    }) : ({
+        selection: null,
+        tilePosition: null,
     });
 }
 
