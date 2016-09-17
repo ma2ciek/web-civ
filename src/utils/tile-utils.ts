@@ -128,3 +128,10 @@ export function getTileIndexFromCameraPoint(camera: Camera) {
 
     return fromLeft * MAP_HEIGHT + fromTop;
 }
+
+export function getUnitFromTile(players: Player[], tileId: number): Unit | null {
+    const units: Unit[] = players
+        .reduce((sum: Unit[], player: Player) => [...sum, ...player.units], []);
+
+    return units.filter(unit => unit.tileId === tileId)[0];
+}

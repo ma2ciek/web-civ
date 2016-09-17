@@ -10,16 +10,17 @@ interface UnitComponentProps {
     selected: boolean;
     scale: number;
     meleeAttackAvailable: boolean;
+    onMouseEnter(): void;
     onContextMenu(): void;
     onClick(): void;
 }
 
-export function UnitComponent({ unit, onContextMenu, onClick, selected, scale, meleeAttackAvailable }: UnitComponentProps) {
+export function UnitComponent({ unit, onContextMenu, onClick, onMouseEnter, selected, scale, meleeAttackAvailable }: UnitComponentProps) {
     const { left, top } = getTileCameraPosition(unit.tileId, scale);
     const color = PLAYER_COLORS[unit.ownerId];
 
     return (
-        <g onContextMenu={() => onContextMenu()} onClick={() => onClick()}
+        <g onContextMenu={() => onContextMenu()} onClick={() => onClick()} onMouseEnter={() => onMouseEnter()}
             className={classnames('unit', {
                 'selected-unit': selected,
                 'melee-attack': meleeAttackAvailable,

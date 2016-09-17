@@ -7,7 +7,7 @@ import { Units } from './Units';
 import { Towns } from './Towns';
 import { Tiles } from './Tiles';
 import { SelectedUnitMovement } from './SelectedUnitMovement';
-import { Tooltip } from './Tooltip';
+import { Tooltip } from './tooltip/Tooltip';
 
 interface MapContentProps {
     camera: Camera;

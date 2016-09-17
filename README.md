@@ -29,7 +29,7 @@ TODO
 npm install -g webpack 
 npm install
 
-webpack --watch
+npm start
 ```
 
 ## Testing

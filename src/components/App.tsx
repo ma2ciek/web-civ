@@ -14,7 +14,7 @@ class App extends React.Component<AppProps, {}> {
         return (
             <div className='app'>
                 <TopMenu />
-                <div style={{ display: 'flex' }}>
+                <div style={{ display: 'flex', height: '100vh' }}>
                     <AnimatedMap />
                     <UnitMenu />
                 </div>

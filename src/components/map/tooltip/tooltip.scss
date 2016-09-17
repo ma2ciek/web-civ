@@ -1,0 +1,39 @@
+$background-color: rgba(0,0,0,0.8);
+
+.tooltip {
+    position: relative;
+    opacity: inherit;
+    
+    div.container {
+        position: fixed;     
+        bottom: 0;
+        box-sizing: border-box;
+        width: 100%;
+           
+        color: #fff;
+        background-color: $background-color;
+        border-radius: 5px;
+        overflow-y: auto;
+        font-size: 10px;
+        opacity: inherit;
+
+        div {
+            border-bottom: 1px dashed #aaa;
+            margin: 15px;
+
+            &:last-child {
+                border-bottom-color: transparent; 
+            }
+
+            h2 {          
+                color: #fff;
+                text-align: center;
+            }
+        }
+    }
+   
+}
+
+.tooltip-triangle {
+    fill: $background-color;
+}

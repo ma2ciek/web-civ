@@ -15,7 +15,7 @@ export function configureStore(): Promise<Store<AppState>> {
 
         const middlewares = [
             (promise as any),
-            createLogger(),
+          //  createLogger(),
         ];
 
         const store = data ?

@@ -41,6 +41,7 @@ export function nextTurn(state: AppState) {
     const { selection, tilePosition } = getSelected(nextPlayer, state.camera.zoom);
 
     return merge(state, {
+        hoveredTileIndex: -1,
         selection: selection as Selection | null,
         currentPlayerIndex: nextPlayerIndex,
         turn: state.turn + (nextPlayerIndex === 0 ? 1 : 0),

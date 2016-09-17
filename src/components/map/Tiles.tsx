@@ -14,16 +14,15 @@ interface TilesProps {
     dispatch: Function;
 }
 
-export function _Tiles({ players, currentPlayerIndex, camera, tiles, hoveredTileIndex, dispatch }: TilesProps) {
+export function _Tiles({ players, currentPlayerIndex, camera, tiles, dispatch }: TilesProps) {
     const currentPlayer = players[currentPlayerIndex];
 
     const visibleTiles = currentPlayer.seenTileIds
         .map(id => tiles[id])
         .filter(tile => isTileVisible(tile, camera)).map(tile =>
             <TileComponent
-                width={200}
-                hovered={hoveredTileIndex === tile.id}
-                onMouseEnter={() => dispatch(hoverTile(tile.id))}
+                onMouseEnter={() => setTimeout(() => dispatch(hoverTile(tile.id)), 0) }
+                onMouseLeave={() => dispatch(hoverTile(-1))}
                 tile={tile}
                 key={tile.id}
                 scale={camera.zoom}

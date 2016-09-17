@@ -51,5 +51,11 @@
     "ts-loader": "^0.8.2",
     "typescript": "^2.0.2",
     "webpack": "^1.13.2"
+  },
+  "dependencies": {
+    "typescript": "^2.0.2"
+  },
+  "scripts": {
+    "start": "sh ./scripts/start.sh"
   }
 }

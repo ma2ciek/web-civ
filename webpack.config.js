@@ -41,8 +41,8 @@ module.exports = {
 
     externals: {
         'localforage': 'localforage',
-        'react': 'React',
-        'react-dom': 'ReactDOM',
+        // 'react': 'React',
+        // 'react-dom': 'ReactDOM',
     },
     
 }

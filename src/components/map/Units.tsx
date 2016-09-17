@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { AppState, Unit, Player, Selection } from '../../AppState';
-import { selectUnit, meleeAttack } from '../../actions';
+import { selectUnit, meleeAttack, hoverTile } from '../../actions';
 import { UnitComponent } from './UnitComponent';
-import { Action } from 'redux-actions';
 import { Dispatch } from 'redux';
 import { isMeleeAttackAvailableFactory } from '../../reducers/unit';
 
@@ -32,7 +31,8 @@ function _Units({ players, currentPlayerIndex, zoom, selection, isMeleeAttackAva
                         selected={player.id === currentPlayer.id && !!selection && selection.id === unit.id}
                         meleeAttackAvailable={meleeAttackAvailable}
                         onContextMenu={() => meleeAttackAvailable && dispatch(meleeAttack(unit))}
-                        onClick={() => unit.ownerId === currentPlayer.id && dispatch(selectUnit(unit))} />
+                        onClick={() => unit.ownerId === currentPlayer.id && dispatch(selectUnit(unit))}
+                        onMouseEnter={() => dispatch(hoverTile(unit.tileId))} />
                 );
             })
     );
