@@ -16,7 +16,7 @@ export function updatePlayerSeenTiles(player: Player) {
 }
 
 
-export function createPlayers(state: AppState) {
+export function createPlayersHandler(state: AppState) {
     console.log(state);
     const players = generatePlayers({ allTiles: state.tiles })
         .map(p => updatePlayerSeenTiles(p));
@@ -34,7 +34,7 @@ export function createPlayers(state: AppState) {
     });
 }
 
-export function nextTurn(state: AppState) {
+export function nextTurnHandler(state: AppState) {
     const nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
     const nextPlayer = state.players[nextPlayerIndex];
 

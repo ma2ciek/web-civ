@@ -37,6 +37,7 @@ interface BaseUnit {
     hp: number;
     hpLeft: number;
     meleeDamage?: number;
+    experience?: number;
 }
 
 export interface Settler extends BaseUnit {
@@ -46,6 +47,7 @@ export interface Settler extends BaseUnit {
 export interface Warrior extends BaseUnit {
     name: 'warrior';
     meleeDamage: number;
+    experience: number;
 }
 
 export type Unit = Settler | Warrior;
@@ -69,4 +71,10 @@ export interface Town {
 
 export interface Building {
     name: string;
+}
+
+export interface ZoomEvent {
+    x: number;
+    y: number;
+    delta: number;
 }

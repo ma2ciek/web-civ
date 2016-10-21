@@ -4,7 +4,7 @@ import { merge, getSelectedUnit, getAvailableMoves, getSurroundingTileIds } from
 import { generateTown } from '../generators';
 import { updatePlayerSeenTiles } from './player';
 
-export const maybeMoveBy = (state: AppState, action: Action<number>) => {
+export const maybeMoveByHandler = (state: AppState, action: Action<number>) => {
     if (state.selection && state.selection.type !== 'unit')
         return state;
 
@@ -38,7 +38,7 @@ export const maybeMoveBy = (state: AppState, action: Action<number>) => {
     return updateCurrentPlayer(nextState, player => updatePlayerSeenTiles(player));
 };
 
-export const createCity = (state: AppState) => {
+export const createCityHandler = (state: AppState) => {
     const { tileId } = state.players[state.currentPlayerIndex].units
         .filter(unit => state.selection && unit.id === state.selection.id)[0];
 
@@ -59,11 +59,11 @@ export const createCity = (state: AppState) => {
     });
 };
 
-export const distanceAttack = (state: AppState, action: Action<Unit>) => {
+export const distanceAttackHandler = (state: AppState, action: Action<Unit>) => {
     return state;
 };
 
-export const meleeAttack = (state: AppState, action: Action<Unit>) => {
+export const meleeAttackHandler = (state: AppState, action: Action<Unit>) => {
     const enemy = <Unit>action.payload;
     const selectedtUnit = <Unit>getSelectedUnit(state);
 
@@ -81,10 +81,13 @@ export const meleeAttack = (state: AppState, action: Action<Unit>) => {
         state = updateUnit(state, selectedtUnit, {
             tileId: enemy.tileId,
             movementLeft: 0,
+            experience: selectedtUnit.experience + enemy.hp,
         });
     } else {
         state = updateUnit(state, enemy, { hpLeft });
-        state = updateUnit(state, selectedtUnit, { movementLeft: 0 });
+        state = updateUnit(state, selectedtUnit, {
+            movementLeft: 0,
+        });
     }
 
     return state;
@@ -97,6 +100,7 @@ export function isMeleeAttackAvailableFactory(state: AppState) {
         !!enemy &&
         !!currentUnit &&
         !!currentUnit.meleeDamage &&
+        currentUnit.ownerId !== enemy.ownerId &&
         currentUnit.movementLeft >= 1 &&
         getSurroundingTileIds([currentUnit.tileId]).indexOf(enemy.tileId) !== -1
     );

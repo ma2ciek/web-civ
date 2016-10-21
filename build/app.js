@@ -23061,7 +23061,7 @@
 	    }
 	
 	    _createClass(App, [{
-	        key: 'render',
+	        key: "render",
 	        value: function render() {
 	            return React.createElement("div", { className: 'app' }, React.createElement(TopMenu_1.TopMenu, null), React.createElement("div", { style: { display: 'flex', height: '100vh' } }, React.createElement(AnimatedMap_1.AnimatedMap, null), React.createElement(UnitMenu_1.UnitMenu, null)), React.createElement(BottomMenu_1.BottomMenu, null));
 	        }
@@ -23166,69 +23166,68 @@
 	        var _this = _possibleConstructorReturn(this, (_AnimatedMap.__proto__ || Object.getPrototypeOf(_AnimatedMap)).apply(this, arguments));
 	
 	        _this.mouseDown = false;
-	        _this.settedControls = false;
+	        _this.onResize = function () {
+	            _this.props.moveCamera({ left: 0, top: 0 });
+	        };
+	        _this.onMouseEnter = function () {
+	            _this.mouseDown = false;
+	        };
+	        _this.onContextMenu = function (e) {
+	            e.preventDefault();
+	            e.stopPropagation();
+	        };
+	        _this.onWheel = function (e) {
+	            var delta = e.deltaY / -53;
+	            if (delta) {
+	                _this.props.zoomMap({
+	                    delta: delta,
+	                    x: e.clientX - e.currentTarget.clientWidth / 2,
+	                    y: e.clientY - e.currentTarget.clientHeight / 2
+	                });
+	            }
+	        };
+	        _this.onMouseDown = function (e) {
+	            if (e.nativeEvent.which === 3) return;
+	            _this.mouseX = e.pageX;
+	            _this.mouseY = e.pageY;
+	            _this.mouseDown = true;
+	            e.currentTarget.style.cursor = 'move';
+	        };
+	        _this.onMouseUp = function (e) {
+	            _this.mouseDown = false;
+	            e.currentTarget.style.cursor = 'default';
+	        };
+	        _this.onMouseMove = function (e) {
+	            if (_this.mouseDown) {
+	                _this.props.moveCamera({
+	                    left: _this.mouseX - e.pageX,
+	                    top: _this.mouseY - e.pageY
+	                });
+	            }
+	            _this.mouseX = e.pageX;
+	            _this.mouseY = e.pageY;
+	        };
 	        return _this;
 	    }
 	
 	    _createClass(_AnimatedMap, [{
-	        key: 'render',
-	        value: function render() {
-	            var _this2 = this;
-	
-	            return React.createElement("div", { className: 'map', ref: function ref(map) {
-	                    return _this2.setControls(map);
-	                } }, React.createElement(MapContent_1.MapContent, null));
+	        key: "componentWillMount",
+	        value: function componentWillMount() {
+	            window.addEventListener('resize', this.onResize);
+	            window.addEventListener('mouseenter', this.onMouseEnter);
+	            window.addEventListener('contextmenu', this.onContextMenu);
 	        }
 	    }, {
-	        key: 'setControls',
-	        value: function setControls(map) {
-	            var _this3 = this;
-	
-	            var dispatch = this.props.dispatch;
-	
-	            if (!map || this.settedControls) return;
-	            window.addEventListener('resize', function () {
-	                return dispatch(actions_1.moveCamera({ left: 0, top: 0 }));
-	            });
-	            window.addEventListener('mouseenter', function () {
-	                _this3.mouseDown = false;
-	            });
-	            window.addEventListener('contextmenu', function (e) {
-	                e.preventDefault();
-	                e.stopPropagation();
-	            });
-	            try {
-	                map.addEventListener('wheel', function (e) {
-	                    var delta = e.wheelDelta / 120 || e.deltaY / -53;
-	                    if (delta) {
-	                        dispatch(actions_1.zoomMap(delta));
-	                    }
-	                });
-	            } catch (err) {
-	                console.warn('wheel is not supported');
-	            }
-	            map.addEventListener('mousedown', function (e) {
-	                if (e.which === 3) return;
-	                _this3.mouseX = e.pageX;
-	                _this3.mouseY = e.pageY;
-	                _this3.mouseDown = true;
-	                map.style.cursor = 'move';
-	            });
-	            map.addEventListener('mouseup', function () {
-	                _this3.mouseDown = false;
-	                map.style.cursor = 'default';
-	            });
-	            map.addEventListener('mousemove', function (e) {
-	                if (_this3.mouseDown) {
-	                    dispatch(actions_1.moveCamera({
-	                        left: _this3.mouseX - e.pageX,
-	                        top: _this3.mouseY - e.pageY
-	                    }));
-	                }
-	                _this3.mouseX = e.pageX;
-	                _this3.mouseY = e.pageY;
-	            });
-	            this.settedControls = true;
+	        key: "componentWillUnmount",
+	        value: function componentWillUnmount() {
+	            window.removeEventListener('resize', this.onResize);
+	            window.removeEventListener('mouseenter', this.onMouseEnter);
+	            window.removeEventListener('contextmenu', this.onContextMenu);
+	        }
+	    }, {
+	        key: "render",
+	        value: function render() {
+	            return React.createElement("div", { className: 'map', onMouseDown: this.onMouseDown, onMouseUp: this.onMouseUp, onMouseMove: this.onMouseMove, onWheel: this.onWheel }, React.createElement(MapContent_1.MapContent, null));
 	        }
 	    }]);
 	
@@ -23237,7 +23236,7 @@
 	
 	exports.AnimatedMap = react_redux_1.connect(function () {
 	    return {};
-	})(_AnimatedMap);
+	}, { moveCamera: actions_1.moveCamera, zoomMap: actions_1.zoomMap })(_AnimatedMap);
 
 /***/ },
 /* 204 */
@@ -23279,8 +23278,8 @@
 	  return town;
 	});
 	exports.ZOOM_MAP = 'ZOOM_MAP';
-	exports.zoomMap = redux_actions_1.createAction(exports.ZOOM_MAP, function (delta) {
-	  return delta;
+	exports.zoomMap = redux_actions_1.createAction(exports.ZOOM_MAP, function (zoom) {
+	  return zoom;
 	});
 	exports.NEXT_SELECTION = 'NEXT_SELECTION';
 	exports.nextSelection = redux_actions_1.createAction(exports.NEXT_SELECTION);
@@ -28473,7 +28472,6 @@
 	
 	var React = __webpack_require__(1);
 	var react_redux_1 = __webpack_require__(172);
-	var constants_1 = __webpack_require__(198);
 	var Patterns_1 = __webpack_require__(355);
 	var Units_1 = __webpack_require__(356);
 	var Towns_1 = __webpack_require__(402);
@@ -28484,7 +28482,7 @@
 	    var camera = _ref.camera;
 	    var currentPlayer = _ref.currentPlayer;
 	
-	    var transform = 'translate(' + (-camera.left + window.innerWidth / 2 - constants_1.TILE_WIDTH * camera.zoom / 2) + ' ' + (-camera.top + window.innerHeight / 2 - constants_1.TILE_HEIGHT * camera.zoom / 2) + ')';
+	    var transform = 'translate(' + (-camera.left + window.innerWidth / 2) + ' ' + (-camera.top + window.innerHeight / 2) + ')';
 	    if (!currentPlayer) return React.createElement("svg", null);
 	    return React.createElement("svg", { width: '100%', height: '100vh' }, React.createElement(Patterns_1.Patterns, null), React.createElement("g", { transform: transform }, React.createElement(Tiles_1.Tiles, null), React.createElement(Towns_1.Towns, null), React.createElement(Units_1.Units, null), React.createElement(SelectedUnitMovement_1.SelectedUnitMovement, null), React.createElement(Tooltip_1.Tooltip, null)));
 	}
@@ -45637,7 +45635,7 @@
 	function createCssTransformMatrix(translation) {
 	    var scale = arguments.length <= 1 || arguments[1] === undefined ? 1 : arguments[1];
 	
-	    return 'matrix(' + scale + ',0,0,' + scale + ',' + translation.left + ',' + translation.top + ')';
+	    return "matrix(" + scale + ",0,0," + scale + "," + translation.left + "," + translation.top + ")";
 	}
 	exports.createCssTransformMatrix = createCssTransformMatrix;
 	function toUpperCaseFirstLetter(name) {
@@ -45725,7 +45723,7 @@
 	var utils_1 = __webpack_require__(358);
 	var generators_1 = __webpack_require__(366);
 	var player_1 = __webpack_require__(401);
-	exports.maybeMoveBy = function (state, action) {
+	exports.maybeMoveByHandler = function (state, action) {
 	    if (state.selection && state.selection.type !== 'unit') return state;
 	    var currentPlayer = state.players[state.currentPlayerIndex];
 	    var activeUnit = utils_1.getSelectedUnit(state);
@@ -45748,7 +45746,7 @@
 	        return player_1.updatePlayerSeenTiles(player);
 	    });
 	};
-	exports.createCity = function (state) {
+	exports.createCityHandler = function (state) {
 	    var tileId = state.players[state.currentPlayerIndex].units.filter(function (unit) {
 	        return state.selection && unit.id === state.selection.id;
 	    })[0].tileId;
@@ -45770,10 +45768,10 @@
 	        })
 	    });
 	};
-	exports.distanceAttack = function (state, action) {
+	exports.distanceAttackHandler = function (state, action) {
 	    return state;
 	};
-	exports.meleeAttack = function (state, action) {
+	exports.meleeAttackHandler = function (state, action) {
 	    var enemy = action.payload;
 	    var selectedtUnit = utils_1.getSelectedUnit(state);
 	    if (!isMeleeAttackAvailableFactory(state)(enemy)) return state;
@@ -45784,18 +45782,21 @@
 	        state = removeUnitFromState(state, enemy);
 	        state = updateUnit(state, selectedtUnit, {
 	            tileId: enemy.tileId,
-	            movementLeft: 0
+	            movementLeft: 0,
+	            experience: selectedtUnit.experience + enemy.hp
 	        });
 	    } else {
 	        state = updateUnit(state, enemy, { hpLeft: hpLeft });
-	        state = updateUnit(state, selectedtUnit, { movementLeft: 0 });
+	        state = updateUnit(state, selectedtUnit, {
+	            movementLeft: 0
+	        });
 	    }
 	    return state;
 	};
 	function isMeleeAttackAvailableFactory(state) {
 	    var currentUnit = utils_1.getSelectedUnit(state);
 	    return function (enemy) {
-	        return !!enemy && !!currentUnit && !!currentUnit.meleeDamage && currentUnit.movementLeft >= 1 && utils_1.getSurroundingTileIds([currentUnit.tileId]).indexOf(enemy.tileId) !== -1;
+	        return !!enemy && !!currentUnit && !!currentUnit.meleeDamage && currentUnit.ownerId !== enemy.ownerId && currentUnit.movementLeft >= 1 && utils_1.getSurroundingTileIds([currentUnit.tileId]).indexOf(enemy.tileId) !== -1;
 	    };
 	}
 	exports.isMeleeAttackAvailableFactory = isMeleeAttackAvailableFactory;
@@ -45906,7 +45907,8 @@
 	                movementLeft: 3,
 	                hp: 20,
 	                hpLeft: 20,
-	                meleeDamage: 5
+	                meleeDamage: 5,
+	                experience: 0
 	            }]
 	        });
 	    };
@@ -50543,7 +50545,7 @@
 	    });
 	}
 	exports.updatePlayerSeenTiles = updatePlayerSeenTiles;
-	function createPlayers(state) {
+	function createPlayersHandler(state) {
 	    console.log(state);
 	    var players = generators_1.generatePlayers({ allTiles: state.tiles }).map(function (p) {
 	        return updatePlayerSeenTiles(p);
@@ -50559,8 +50561,8 @@
 	        camera: utils_1.merge(state.camera, firstUnitTileCameraPosition)
 	    });
 	}
-	exports.createPlayers = createPlayers;
-	function nextTurn(state) {
+	exports.createPlayersHandler = createPlayersHandler;
+	function nextTurnHandler(state) {
 	    var nextPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
 	    var nextPlayer = state.players[nextPlayerIndex];
 	
@@ -50586,7 +50588,7 @@
 	        })
 	    });
 	}
-	exports.nextTurn = nextTurn;
+	exports.nextTurnHandler = nextTurnHandler;
 
 /***/ },
 /* 402 */
@@ -50748,7 +50750,7 @@
 	    }
 	
 	    _createClass(TileComponent, [{
-	        key: 'render',
+	        key: "render",
 	        value: function render() {
 	            var _props = this.props;
 	            var tile = _props.tile;
@@ -50859,12 +50861,12 @@
 	    }
 	
 	    _createClass(_Tooltip, [{
-	        key: 'componentWillReceiveProps',
+	        key: "componentWillReceiveProps",
 	        value: function componentWillReceiveProps(props) {
 	            if (props.hoveredTile !== this.props.hoveredTile) this.setState({ show: true });
 	        }
 	    }, {
-	        key: 'render',
+	        key: "render",
 	        value: function render() {
 	            var hoveredTile = this.props.hoveredTile;
 	            var show = this.state.show;
@@ -50872,7 +50874,7 @@
 	            return React.createElement(animations_1.DelayAnimator, { show: show && !!hoveredTile, appearDelay: 1000, Animator: animations_1.Fade }, hoveredTile && this.renderTooltip());
 	        }
 	    }, {
-	        key: 'renderTooltip',
+	        key: "renderTooltip",
 	        value: function renderTooltip() {
 	            var _props = this.props;
 	            var zoom = _props.zoom;
@@ -51871,11 +51873,12 @@
 	
 	var React = __webpack_require__(1);
 	var utils_1 = __webpack_require__(358);
+	var constants_1 = __webpack_require__(198);
 	exports.UnitTooltip = function (_ref) {
 	    var unit = _ref.unit;
 	
 	    var upperCaseUnitName = utils_1.toUpperCaseFirstLetter(unit.name);
-	    return React.createElement("div", null, React.createElement("h2", null, upperCaseUnitName), React.createElement("p", null, "HP: ", unit.hpLeft, "/", unit.hp), React.createElement("p", null, "Owner: ", unit.ownerId));
+	    return React.createElement("div", null, React.createElement("h2", null, upperCaseUnitName), React.createElement("p", null, "HP: ", unit.hpLeft, "/", unit.hp), React.createElement("p", null, "Owner: " + constants_1.PLAYER_COLORS[unit.ownerId] + " player"), typeof unit.experience === 'number' && React.createElement("p", null, "Experience: ", unit.experience));
 	};
 
 /***/ },
@@ -51947,15 +51950,15 @@
 	    }
 	
 	    _createClass(_UnitMenu, [{
-	        key: 'render',
+	        key: "render",
 	        value: function render() {
 	            var selectedUnit = this.props.selectedUnit;
 	
 	            if (!selectedUnit) return null;
-	            return React.createElement("div", { className: 'unit-side-menu' }, React.createElement("h2", null, selectedUnit.name.toUpperCase()), React.createElement("div", null, 'Movement: ' + selectedUnit.movementLeft + '/' + selectedUnit.movement), React.createElement("div", null, 'Hp: ' + selectedUnit.hpLeft + '/' + selectedUnit.hp), selectedUnit.name === 'warrior' && React.createElement("div", null, 'Melee dmg: ' + selectedUnit.meleeDamage), React.createElement("div", { className: 'unit-options' }, this.renderOptions()));
+	            return React.createElement("div", { className: 'unit-side-menu' }, React.createElement("h2", null, selectedUnit.name.toUpperCase()), React.createElement("div", null, 'Movement: ' + selectedUnit.movementLeft + '/' + selectedUnit.movement), React.createElement("div", null, 'Hp: ' + selectedUnit.hpLeft + '/' + selectedUnit.hp), typeof selectedUnit.meleeDamage === 'number' && React.createElement("div", null, 'Melee dmg: ' + selectedUnit.meleeDamage), typeof selectedUnit.experience === 'number' && React.createElement("div", null, 'Exp: ' + selectedUnit.experience), React.createElement("div", { className: 'unit-options' }, this.renderOptions()));
 	        }
 	    }, {
-	        key: 'renderOptions',
+	        key: "renderOptions",
 	        value: function renderOptions() {
 	            var selectedUnit = this.props.selectedUnit;
 	
@@ -52098,7 +52101,7 @@
 	    hoveredTileIndex: 0
 	};
 	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = redux_actions_1.handleActions((_redux_actions_1$hand = {}, _defineProperty(_redux_actions_1$hand, actions.GENERATE_PLAYERS, player_1.createPlayers), _defineProperty(_redux_actions_1$hand, actions.NEXT_TURN, player_1.nextTurn), _defineProperty(_redux_actions_1$hand, actions.DESELECT, selection_1.deselect), _defineProperty(_redux_actions_1$hand, actions.SELECT_UNIT, selection_1.selectUnit), _defineProperty(_redux_actions_1$hand, actions.SELECT_TOWN, selection_1.selectTown), _defineProperty(_redux_actions_1$hand, actions.NEXT_SELECTION, selection_1.nextSelection), _defineProperty(_redux_actions_1$hand, actions.MAYBE_MOVE_BY, unit_1.maybeMoveBy), _defineProperty(_redux_actions_1$hand, actions.CREATE_CITY, unit_1.createCity), _defineProperty(_redux_actions_1$hand, actions.DISTANCE_ATTACK, unit_1.distanceAttack), _defineProperty(_redux_actions_1$hand, actions.MELEE_ATTACK, unit_1.meleeAttack), _defineProperty(_redux_actions_1$hand, actions.ZOOM_MAP, camera_1.zoomMap), _defineProperty(_redux_actions_1$hand, actions.MOVE_CAMERA, camera_1.moveCamera), _defineProperty(_redux_actions_1$hand, actions.HOVER_TILE, camera_1.hoverTile), _redux_actions_1$hand), exports.initialState);
+	exports.default = redux_actions_1.handleActions((_redux_actions_1$hand = {}, _defineProperty(_redux_actions_1$hand, actions.GENERATE_PLAYERS, player_1.createPlayersHandler), _defineProperty(_redux_actions_1$hand, actions.NEXT_TURN, player_1.nextTurnHandler), _defineProperty(_redux_actions_1$hand, actions.DESELECT, selection_1.deselectHandler), _defineProperty(_redux_actions_1$hand, actions.SELECT_UNIT, selection_1.selectUnitHandler), _defineProperty(_redux_actions_1$hand, actions.SELECT_TOWN, selection_1.selectTownHandler), _defineProperty(_redux_actions_1$hand, actions.NEXT_SELECTION, selection_1.nextSelectionHandler), _defineProperty(_redux_actions_1$hand, actions.MAYBE_MOVE_BY, unit_1.maybeMoveByHandler), _defineProperty(_redux_actions_1$hand, actions.CREATE_CITY, unit_1.createCityHandler), _defineProperty(_redux_actions_1$hand, actions.DISTANCE_ATTACK, unit_1.distanceAttackHandler), _defineProperty(_redux_actions_1$hand, actions.MELEE_ATTACK, unit_1.meleeAttackHandler), _defineProperty(_redux_actions_1$hand, actions.ZOOM_MAP, camera_1.zoomMapHandler), _defineProperty(_redux_actions_1$hand, actions.MOVE_CAMERA, camera_1.moveCameraHandler), _defineProperty(_redux_actions_1$hand, actions.HOVER_TILE, camera_1.hoverTileHandler), _redux_actions_1$hand), exports.initialState);
 
 /***/ },
 /* 436 */
@@ -52107,18 +52110,19 @@
 	"use strict";
 	
 	var utils_1 = __webpack_require__(358);
-	function zoomMap(state, action) {
-	    var zoom = 1 + action.payload * 0.03;
+	function zoomMapHandler(state, action) {
+	    if (!action.payload) return state;
+	    var zoomDelta = action.payload.delta * 0.03;
+	    var left = state.camera.left + (action.payload.x + state.camera.left) * zoomDelta;
+	    var top = state.camera.top + (action.payload.y + state.camera.top) * zoomDelta;
+	    var zoom = state.camera.zoom * (1 + zoomDelta);
 	    return utils_1.merge(state, {
-	        camera: utils_1.merge(state.camera, {
-	            zoom: state.camera.zoom * zoom,
-	            left: state.camera.left * zoom,
-	            top: state.camera.top * zoom
-	        })
+	        camera: utils_1.merge(state.camera, { zoom: zoom, left: left, top: top })
 	    });
 	}
-	exports.zoomMap = zoomMap;
-	function moveCamera(state, action) {
+	exports.zoomMapHandler = zoomMapHandler;
+	function moveCameraHandler(state, action) {
+	    if (!action.payload) return state;
 	    return utils_1.merge(state, {
 	        camera: utils_1.merge(state.camera, {
 	            left: state.camera.left + action.payload.left,
@@ -52126,13 +52130,13 @@
 	        })
 	    });
 	}
-	exports.moveCamera = moveCamera;
-	function hoverTile(state, action) {
+	exports.moveCameraHandler = moveCameraHandler;
+	function hoverTileHandler(state, action) {
 	    return utils_1.merge(state, {
 	        hoveredTileIndex: action.payload
 	    });
 	}
-	exports.hoverTile = hoverTile;
+	exports.hoverTileHandler = hoverTileHandler;
 
 /***/ },
 /* 437 */
@@ -52141,11 +52145,11 @@
 	"use strict";
 	
 	var utils = __webpack_require__(358);
-	function deselect(state) {
+	function deselectHandler(state) {
 	    return state;
 	}
-	exports.deselect = deselect;
-	function selectUnit(state, action) {
+	exports.deselectHandler = deselectHandler;
+	function selectUnitHandler(state, action) {
 	    return utils.merge(state, {
 	        selection: {
 	            type: 'unit',
@@ -52153,8 +52157,8 @@
 	        }
 	    });
 	}
-	exports.selectUnit = selectUnit;
-	function selectTown(state, action) {
+	exports.selectUnitHandler = selectUnitHandler;
+	function selectTownHandler(state, action) {
 	    return utils.merge(state, {
 	        selection: {
 	            type: 'town',
@@ -52162,8 +52166,8 @@
 	        }
 	    });
 	}
-	exports.selectTown = selectTown;
-	function nextSelection(state) {
+	exports.selectTownHandler = selectTownHandler;
+	function nextSelectionHandler(state) {
 	    var nextSelection = utils.getNextSelection(state);
 	    if (!nextSelection) return state;
 	    var camera = utils.getSelectedTilePosition(state, nextSelection);
@@ -52172,7 +52176,7 @@
 	        camera: utils.merge(state.camera, camera)
 	    });
 	}
-	exports.nextSelection = nextSelection;
+	exports.nextSelectionHandler = nextSelectionHandler;
 
 /***/ },
 /* 438 */

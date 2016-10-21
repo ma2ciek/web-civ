@@ -41,13 +41,13 @@ class _UnitMenu extends React.Component<UnitMenuProps, {}> {
                 <h2>{selectedUnit.name.toUpperCase()}</h2>
                 <div>{'Movement: ' + selectedUnit.movementLeft + '/' + selectedUnit.movement}</div>
                 <div>{'Hp: ' + selectedUnit.hpLeft + '/' + selectedUnit.hp}</div>
-                {selectedUnit.name === 'warrior' && <div>{'Melee dmg: ' + selectedUnit.meleeDamage}</div>}
+                {typeof selectedUnit.meleeDamage === 'number' && <div>{'Melee dmg: ' + selectedUnit.meleeDamage}</div>}
+                {typeof selectedUnit.experience === 'number' && <div>{'Exp: ' + selectedUnit.experience}</div>}
                 <div className='unit-options'>
                     {this.renderOptions()}
                 </div>
             </div>
         );
-
     };
 
     private renderOptions() {

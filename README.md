@@ -22,7 +22,7 @@ TODO
 - [ ] Animations of unit movement and other actions
 - [ ] Configuration of map width, map height, number of players
 - [ ] Technologies (?)
-
+- [ ] Zoom to point
 
 ## Development:
 ```bash

@@ -1,5 +1,5 @@
 import { createAction } from 'redux-actions';
-import { Unit, Position, Town, Tile } from './AppState';
+import { Unit, Position, Town, Tile, ZoomEvent } from './AppState';
 
 export const NEXT_TURN = 'NEXT_TURN';
 export const nextTurn = createAction(NEXT_TURN);
@@ -32,7 +32,7 @@ export const SELECT_TOWN = 'SELECT_TOWN';
 export const selectTown = createAction(SELECT_TOWN, (town: Town) => town);
 
 export const ZOOM_MAP = 'ZOOM_MAP';
-export const zoomMap = createAction(ZOOM_MAP, (delta: number) => delta);
+export const zoomMap = createAction(ZOOM_MAP, (zoom: ZoomEvent) => zoom);
 
 export const NEXT_SELECTION = 'NEXT_SELECTION';
 export const nextSelection = createAction(NEXT_SELECTION);

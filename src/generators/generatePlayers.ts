@@ -52,6 +52,7 @@ export function generatePlayers({ allTiles }: PlayerGeneratorProps) {
                 hp: 20,
                 hpLeft: 20,
                 meleeDamage: 5,
+                experience: 0,
             })],
         });
     }

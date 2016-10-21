@@ -2,11 +2,11 @@ import { AppState, Selection, Unit } from '../AppState';
 import { Action } from 'redux-actions';
 import * as utils from '../utils';
 
-export function deselect(state: AppState) {
+export function deselectHandler(state: AppState) {
     return state;
 }
 
-export function selectUnit(state: AppState, action: Action<Unit>) {
+export function selectUnitHandler(state: AppState, action: Action<Unit>) {
     return utils.merge(state, {
         selection: {
             type: 'unit',
@@ -15,7 +15,7 @@ export function selectUnit(state: AppState, action: Action<Unit>) {
     });
 }
 
-export function selectTown(state: AppState, action: Action<{ id: string }>) {
+export function selectTownHandler(state: AppState, action: Action<{ id: string }>) {
     return utils.merge(state, {
         selection: {
             type: 'town',
@@ -24,7 +24,7 @@ export function selectTown(state: AppState, action: Action<{ id: string }>) {
     });
 }
 
-export function nextSelection(state: AppState) {
+export function nextSelectionHandler(state: AppState) {
     let nextSelection = utils.getNextSelection(state);
     if (!nextSelection)
         return state;

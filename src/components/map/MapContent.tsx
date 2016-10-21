@@ -17,8 +17,8 @@ interface MapContentProps {
 function _MapContent({ camera, currentPlayer }: MapContentProps) {
     const transform = (
         'translate(' +
-        (-camera.left + window.innerWidth / 2 - TILE_WIDTH * camera.zoom / 2) + ' ' +
-        (-camera.top + window.innerHeight / 2 - TILE_HEIGHT * camera.zoom / 2) + ')'
+        (-camera.left + window.innerWidth / 2) + ' ' +
+        (-camera.top + window.innerHeight / 2) + ')'
     );
 
     if (!currentPlayer)
