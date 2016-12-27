@@ -26,9 +26,9 @@ export function getUnique(seed: number) {
 	const r1 = getRandom(seed);
 	const r2 = getRandom(r1.nextSeed);
 	const r3 = getRandom(r2.nextSeed);
-	const value = r1.value.toString() + '-' +
-		r2.value.toString() + '-' +
-		r3.value.toString() + '-';
+	const value = r1.value.toString().slice(3, 9) + '-' +
+		r2.value.toString().slice(3, 9) + '-' +
+		r3.value.toString().slice(3, 9);
 
 	return { value, nextSeed: r3.nextSeed };
 }

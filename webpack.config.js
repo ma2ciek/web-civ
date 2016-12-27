@@ -1,5 +1,4 @@
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
-const glob = require('glob');
 
 module.exports = {
     entry: './src/index.tsx',
