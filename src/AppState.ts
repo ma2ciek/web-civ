@@ -6,6 +6,7 @@ export interface AppState {
     camera: Camera;
     selection: Selection | null;
     hoveredTileIndex: number;
+    seed: number;
 }
 
 export interface Selection {

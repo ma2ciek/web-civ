@@ -2,19 +2,16 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const glob = require('glob');
 
 module.exports = {
-    entry: {
-        app: './src/index.tsx',
-        test: glob.sync('./src/**/*-spec.ts')
-    },
+    entry: './src/index.tsx',
 
     output: {
-        filename: './build/[name].js',
+        filename: './build/app.js',
     },
 
     devtool: 'source-map',
 
     resolve: {
-        extensions: ['', 'webpack.config.js', '.web.js', '.ts', '.tsx', '.js'],
+        extensions: ['.ts', '.tsx', '.js'],
         // alias: { 'react$': 'react/lib/ReactWithAddons.js', 'react-dom$': 'react/lib/ReactDOM.js' }
     },
 
@@ -22,21 +19,27 @@ module.exports = {
         loaders: [
             {
                 test: /\.tsx?$/,
-                loader: 'babel?presets[]=es2015!ts-loader'
+                loader: 'babel-loader?presets[]=es2015!ts-loader'
             },
             {
                 test: /\.scss$/,
-                loader: ExtractTextPlugin.extract('style', 'css!sass')
+                loader: ExtractTextPlugin.extract({
+                    fallbackLoader: 'style-loader',
+                    loader: 'css-loader!sass-loader'
+                }),
+            },
+            {
+                test: /\/json$/,
+                loader: 'json-loader',
+                include: [
+                    /node_modules/
+                ]
             }
         ],
-
-        preLoaders: [
-            { test: /\.js$/, loader: 'source-map-loader' }
-        ]
     },
 
     plugins: [
-        new ExtractTextPlugin('./build/[name].css')
+        new ExtractTextPlugin('./build/app.css')
     ],
 
     externals: {

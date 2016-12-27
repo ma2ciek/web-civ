@@ -1,18 +1,23 @@
+import { MAP_HEIGHT, MAP_WIDTH } from '../constants';
+
 import { Tile } from '../AppState';
-import { MAP_WIDTH, MAP_HEIGHT } from '../constants';
+import { getRandom } from '../utils';
 import { getRandomType } from '../utils';
 
-export function generateTiles() {
+export function generateTiles(seed: number) {
     const tiles: Tile[] = [];
 
     for (let i = 1; i < MAP_WIDTH - 1; i++) {
         for (let j = 1; j < MAP_HEIGHT - 1; j++) {
             const id = MAP_HEIGHT * i + j;
 
+            const random = getRandom(seed);
+            seed = random.nextSeed;
+
             tiles[id] = {
                 id,
                 ownerId: -1,
-                type: getRandomType(),
+                type: getRandomType(random.value),
             };
         }
     }
@@ -26,5 +31,5 @@ export function generateTiles() {
     }
 
 
-    return tiles;
+    return { tiles, seed };
 }

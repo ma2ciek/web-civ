@@ -6,10 +6,7 @@
             "check-space"
         ],
         "no-any": true,
-        "indent": [
-            true,
-            "spaces"
-        ],
+      
         "label-position": true,
         "label-undefined": true,
         "max-line-length": [
@@ -37,7 +34,6 @@
         "no-duplicate-variable": true,
         "no-empty": true,
         "no-eval": true,
-        "no-inferrable-types": true,
         "no-shadowed-variable": true,
         "no-string-literal": true,
         "no-switch-case-fall-through": true,

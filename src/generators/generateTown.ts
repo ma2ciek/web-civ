@@ -1,13 +1,28 @@
 import { Town } from '../AppState';
-import { v4 } from 'node-uuid';
+import { getUnique } from '../utils';
 
-export function generateTown(tileId: number, playerId: number): Town {
+interface GenerateTownOutput {
+    town: Town;
+    nextSeed: number;
+}
+
+interface GenerateTownInput {
+    tileId: number;
+    playerId: number;
+    seed: number;
+}
+
+export function generateTown(input: GenerateTownInput): GenerateTownOutput {
+    const unique = getUnique(input.seed);
     return {
-        tileId: tileId,
-        ownerId: playerId,
-        id: v4(),
-        name: 'Unnamed town',
-        buildings: [],
+        town: {
+            tileId: input.tileId,
+            ownerId: input.playerId,
+            id: unique.value,
+            name: 'Unnamed town', // TODO: Town #count
+            buildings: []
+        },
+        nextSeed: unique.nextSeed,
     };
 }
 

@@ -1,5 +1,6 @@
+import { Position, Tile, Town, Unit, ZoomEvent } from './AppState';
+
 import { createAction } from 'redux-actions';
-import { Unit, Position, Town, Tile, ZoomEvent } from './AppState';
 
 export const NEXT_TURN = 'NEXT_TURN';
 export const nextTurn = createAction(NEXT_TURN);
@@ -14,7 +15,10 @@ export const DISTANCE_ATTACK = 'DISTANCE_ATTACK';
 export const distanceAttack = createAction<Unit>(DISTANCE_ATTACK, (enemyId: Unit) => enemyId);
 
 export const GENERATE_PLAYERS = 'GENERATE_PLAYERS';
-export const generatePlayers = createAction(GENERATE_PLAYERS);
+export const generatePlayers = createAction(GENERATE_PLAYERS)
+
+export const GENERATE_TILES = 'GENERATE_TILES';
+export const generateTiles = createAction(GENERATE_TILES);
 
 export const MOVE_CAMERA = 'MOVE_CAMERA';
 export const moveCamera = createAction<Position>(MOVE_CAMERA, pos => pos);

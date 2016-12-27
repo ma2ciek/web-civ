@@ -1,7 +1,8 @@
-import { Player, AppState, Selection } from '../AppState';
-import { merge, getSelected, getSurroundingTileIds, getTileCameraPosition } from '../utils';
-import { uniq } from 'lodash';
+import { AppState, Player, Selection } from '../AppState';
+import { getSelected, getSurroundingTileIds, getTileCameraPosition, merge } from '../utils';
+
 import { generatePlayers } from '../generators';
+import { uniq } from 'lodash';
 
 export function updatePlayerSeenTiles(player: Player) {
     return merge(player, {
@@ -17,14 +18,14 @@ export function updatePlayerSeenTiles(player: Player) {
 
 
 export function createPlayersHandler(state: AppState) {
-    console.log(state);
-    const players = generatePlayers({ allTiles: state.tiles })
-        .map(p => updatePlayerSeenTiles(p));
+    let { players, nextSeed } = generatePlayers({ allTiles: state.tiles, seed: state.seed });
+    players = players.map(p => updatePlayerSeenTiles(p));
 
     const selectedUnit = players[0].units[0];
     const firstUnitTileCameraPosition = getTileCameraPosition(selectedUnit.tileId, state.camera.zoom);
 
     return merge(state, {
+        seed: nextSeed,
         selection: {
             type: 'unit',
             id: selectedUnit.id,

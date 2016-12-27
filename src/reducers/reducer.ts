@@ -1,14 +1,16 @@
 import * as actions from '../actions';
-import { AppState } from '../AppState';
+
+import { createCityHandler, distanceAttackHandler, maybeMoveByHandler, meleeAttackHandler } from './unit';
 import { createPlayersHandler, nextTurnHandler } from './player';
-import { generateTiles } from '../generators';
+import { deselectHandler, nextSelectionHandler, selectTownHandler, selectUnitHandler } from './selection';
+import { hoverTileHandler, moveCameraHandler, zoomMapHandler } from './camera';
+
+import { AppState } from '../AppState';
+import { createTilesHandler } from './map';
 import { handleActions } from 'redux-actions';
-import { maybeMoveByHandler, createCityHandler, meleeAttackHandler, distanceAttackHandler } from './unit';
-import { moveCameraHandler, zoomMapHandler, hoverTileHandler } from './camera';
-import { selectUnitHandler, deselectHandler, selectTownHandler, nextSelectionHandler } from './selection';
 
 export const initialState: AppState = {
-    tiles: generateTiles(), // TODO
+    tiles: [],
     players: [],
     turn: 0,
     currentPlayerIndex: 0,
@@ -19,10 +21,13 @@ export const initialState: AppState = {
     },
     selection: null,
     hoveredTileIndex: 0,
+    seed: 0,
 };
+
 
 export default handleActions<AppState, {}>({
     [actions.GENERATE_PLAYERS]: createPlayersHandler,
+    [actions.GENERATE_TILES]: createTilesHandler,
     [actions.NEXT_TURN]: nextTurnHandler,
 
     [actions.DESELECT]: deselectHandler,

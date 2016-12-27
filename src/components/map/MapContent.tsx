@@ -1,13 +1,14 @@
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { AppState, Player, Camera } from '../../AppState';
-import { TILE_WIDTH, TILE_HEIGHT } from '../../constants';
+
+import { AppState, Camera, Player } from '../../AppState';
+
 import { Patterns } from './Patterns';
-import { Units } from './Units';
-import { Towns } from './Towns';
-import { Tiles } from './Tiles';
 import { SelectedUnitMovement } from './SelectedUnitMovement';
+import { Tiles } from './Tiles';
 import { Tooltip } from './tooltip/Tooltip';
+import { Towns } from './Towns';
+import { Units } from './Units';
+import { connect } from 'react-redux';
 
 interface MapContentProps {
     camera: Camera;

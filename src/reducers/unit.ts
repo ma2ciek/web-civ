@@ -1,6 +1,7 @@
-import { AppState, Unit, Player, Selection } from '../AppState';
+import { AppState, Player, Selection, Unit } from '../AppState';
+import { getAvailableMoves, getSelectedUnit, getSurroundingTileIds, merge } from '../utils';
+
 import { Action } from 'redux-actions';
-import { merge, getSelectedUnit, getAvailableMoves, getSurroundingTileIds } from '../utils';
 import { generateTown } from '../generators';
 import { updatePlayerSeenTiles } from './player';
 
@@ -44,7 +45,7 @@ export const createCityHandler = (state: AppState) => {
 
     const playerId = state.players[state.currentPlayerIndex].id;
 
-    const town = generateTown(tileId, playerId);
+    const {town, nextSeed} = generateTown({ tileId, playerId, seed: state.seed });
 
     state = updateCurrentPlayer(state, p => ({
         units: p.units.filter(u => state.selection && u.id !== state.selection.id),
@@ -56,6 +57,7 @@ export const createCityHandler = (state: AppState) => {
             type: 'town',
             id: town.id,
         } as Selection | null),
+        seed: nextSeed,
     });
 };
 
@@ -91,7 +93,7 @@ export const meleeAttackHandler = (state: AppState, action: Action<Unit>) => {
     }
 
     return state;
-}
+};
 
 export function isMeleeAttackAvailableFactory(state: AppState) {
     const currentUnit = getSelectedUnit(state);
